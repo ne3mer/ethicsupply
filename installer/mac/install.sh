@@ -76,6 +76,12 @@ cat > EthicSupply.app/Contents/Info.plist << EOL
     <string>1.0.0</string>
     <key>LSMinimumSystemVersion</key>
     <string>10.15</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.business</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon.icns</string>
 </dict>
 </plist>
 EOL
@@ -88,6 +94,28 @@ source venv/bin/activate
 python3 run.py
 EOL
 chmod +x EthicSupply.app/Contents/MacOS/EthicSupply
+
+# Create a wrapper script to handle environment variables
+cat > EthicSupply.app/Contents/MacOS/run.sh << EOL
+#!/bin/bash
+export PATH="${APP_DIR}/venv/bin:$PATH"
+export PYTHONPATH="${APP_DIR}:$PYTHONPATH"
+cd "${APP_DIR}"
+source venv/bin/activate
+python3 run.py
+EOL
+chmod +x EthicSupply.app/Contents/MacOS/run.sh
+
+# Update the main executable to use the wrapper
+cat > EthicSupply.app/Contents/MacOS/EthicSupply << EOL
+#!/bin/bash
+"${APP_DIR}/EthicSupply.app/Contents/MacOS/run.sh"
+EOL
+chmod +x EthicSupply.app/Contents/MacOS/EthicSupply
+
+# Set proper permissions
+chmod -R 755 EthicSupply.app
+chmod -R 644 EthicSupply.app/Contents/Info.plist
 
 # Move the app bundle to Applications
 mv EthicSupply.app /Applications/
