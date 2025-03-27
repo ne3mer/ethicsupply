@@ -26,9 +26,9 @@ echo -e "${BLUE}Creating virtual environment...${NC}"
 python3 -m venv venv
 source venv/bin/activate
 
-# Install the package
-echo -e "${BLUE}Installing EthicSupply package...${NC}"
-pip install -e .
+# Install dependencies
+echo -e "${BLUE}Installing dependencies...${NC}"
+pip install PyQt6>=6.4.0 pandas>=1.5.0 numpy>=1.21.0 plotly>=5.13.0 tensorflow>=2.12.0 scikit-learn>=1.0.0
 
 # Create desktop shortcut
 echo -e "${BLUE}Creating desktop shortcut...${NC}"
@@ -36,7 +36,7 @@ cat > ~/Desktop/EthicSupply.command << 'EOL'
 #!/bin/bash
 cd "$(dirname "$0")"
 source venv/bin/activate
-ethicsupply
+python3 run.py
 EOL
 chmod +x ~/Desktop/EthicSupply.command
 
@@ -46,7 +46,7 @@ cat > /Applications/EthicSupply.command << 'EOL'
 #!/bin/bash
 cd "$(dirname "$0")"
 source venv/bin/activate
-ethicsupply
+python3 run.py
 EOL
 chmod +x /Applications/EthicSupply.command
 
@@ -54,4 +54,4 @@ echo -e "${GREEN}Installation completed successfully!${NC}"
 echo -e "You can now launch EthicSupply from:"
 echo -e "1. Desktop shortcut"
 echo -e "2. Applications folder"
-echo -e "3. Terminal by typing 'ethicsupply'" 
+echo -e "3. Terminal by typing 'python3 run.py'" 
