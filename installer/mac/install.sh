@@ -8,6 +8,9 @@ NC='\033[0m' # No Color
 
 echo -e "${BLUE}Installing EthicSupply...${NC}"
 
+# Get the absolute path of the current directory
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
 # Check if Python is installed
 if ! command -v python3 &> /dev/null; then
     echo -e "${RED}Python 3 is not installed. Please install Python 3.8 or higher.${NC}"
@@ -32,9 +35,9 @@ pip install PyQt6>=6.4.0 pandas>=1.5.0 numpy>=1.21.0 plotly>=5.13.0 tensorflow>=
 
 # Create desktop shortcut
 echo -e "${BLUE}Creating desktop shortcut...${NC}"
-cat > ~/Desktop/EthicSupply.command << 'EOL'
+cat > ~/Desktop/EthicSupply.command << EOL
 #!/bin/bash
-cd "$(dirname "$0")"
+cd "${APP_DIR}"
 source venv/bin/activate
 python3 run.py
 EOL
@@ -42,16 +45,55 @@ chmod +x ~/Desktop/EthicSupply.command
 
 # Create Applications folder shortcut
 echo -e "${BLUE}Creating Applications shortcut...${NC}"
-cat > /Applications/EthicSupply.command << 'EOL'
+cat > /Applications/EthicSupply.command << EOL
 #!/bin/bash
-cd "$(dirname "$0")"
+cd "${APP_DIR}"
 source venv/bin/activate
 python3 run.py
 EOL
 chmod +x /Applications/EthicSupply.command
 
+# Create an app bundle
+echo -e "${BLUE}Creating application bundle...${NC}"
+mkdir -p EthicSupply.app/Contents/MacOS
+mkdir -p EthicSupply.app/Contents/Resources
+
+# Create Info.plist
+cat > EthicSupply.app/Contents/Info.plist << EOL
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>EthicSupply</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.ethicsupply.app</string>
+    <key>CFBundleName</key>
+    <string>EthicSupply</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0.0</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.15</string>
+</dict>
+</plist>
+EOL
+
+# Create the main script
+cat > EthicSupply.app/Contents/MacOS/EthicSupply << EOL
+#!/bin/bash
+cd "${APP_DIR}"
+source venv/bin/activate
+python3 run.py
+EOL
+chmod +x EthicSupply.app/Contents/MacOS/EthicSupply
+
+# Move the app bundle to Applications
+mv EthicSupply.app /Applications/
+
 echo -e "${GREEN}Installation completed successfully!${NC}"
 echo -e "You can now launch EthicSupply from:"
-echo -e "1. Desktop shortcut"
-echo -e "2. Applications folder"
+echo -e "1. Applications folder (EthicSupply.app)"
+echo -e "2. Desktop shortcut"
 echo -e "3. Terminal by typing 'python3 run.py'" 
