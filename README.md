@@ -1,127 +1,134 @@
 # EthicSupply - Ethical AI Supply Chain Optimizer
 
-EthicSupply is a desktop application that helps optimize supply chain decisions using ethical AI principles. The application balances efficiency, sustainability, and fairness in supplier selection through a TensorFlow-based machine learning model.
+A Python-based application that uses machine learning to optimize supply chain decisions while considering ethical and sustainability factors.
 
 ## Features
 
-- **AI-Powered Optimization**: Uses machine learning to select optimal suppliers based on multiple criteria
-- **Ethical Constraints**: Enforces minimum ethical standards and fairness in supplier selection
-- **Interactive GUI**: Modern, user-friendly interface with real-time visualization
-- **Data Management**:
-  - Import/Export supplier data via CSV
-  - Generate sample data for testing
-  - Dynamic supplier form management
-- **Customizable Settings**:
-  - Adjust optimization weights
-  - Set minimum ethical standards
-  - Configure cost ranges and supplier limits
-  - UI preferences
-
-## Screenshots
-
-[Screenshots will be added here]
-
-## Requirements
-
-- Python 3.8+
-- PyQt6
-- TensorFlow 2.x
-- Plotly
-- Pandas
-- NumPy
+- ML-powered supplier selection
+- Ethical constraints and fairness metrics
+- Sustainability optimization
+- Cost and delivery time efficiency
+- Interactive visualizations
+- User-friendly GUI
 
 ## Installation
+
+### Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package installer)
+
+### Method 1: Install from PyPI (Recommended)
+
+```bash
+pip install ethicsupply
+```
+
+### Method 2: Install from Source
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/ethicsupply.git
+git clone https://github.com/ne3mer/ethicsupply.git
 cd ethicsupply
 ```
 
-2. Create a virtual environment (optional but recommended):
+2. Install the package:
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -e .
 ```
 
-3. Install dependencies:
+### Method 3: Manual Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/ne3mer/ethicsupply.git
+cd ethicsupply
+```
+
+2. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Run the application:
+## Usage
+
+After installation, you can run the application in one of two ways:
+
+1. Using the command-line entry point:
+
+```bash
+ethicsupply
+```
+
+2. Running the main script directly:
 
 ```bash
 python run.py
 ```
-
-## Usage
-
-1. **Input Supplier Data**:
-
-   - Add suppliers manually using the form
-   - Generate sample data for testing
-   - Import data from CSV
-   - Download CSV template for bulk data entry
-
-2. **Configure Settings**:
-
-   - Set optimization weights for different factors
-   - Adjust minimum ethical standards
-   - Configure cost ranges
-   - Set UI preferences
-
-3. **Run Optimization**:
-
-   - Click "Optimize Selection" to run the AI model
-   - View results in multiple formats:
-     - Supplier rankings
-     - Performance metrics
-     - Detailed analysis
-     - Charts and visualizations
-
-4. **Export Results**:
-   - Save optimization results
-   - Export supplier data
-   - Generate reports
 
 ## Project Structure
 
 ```
 ethicsupply/
 ├── src/
-│   ├── gui/
-│   │   ├── __init__.py
-│   │   ├── main_window.py
-│   │   ├── dashboard_page.py
-│   │   ├── input_page.py
-│   │   ├── results_page.py
-│   │   ├── settings_page.py
-│   │   └── sidebar.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── supplier_model.py
-│   └── utils/
-│       └── __init__.py
-├── models/
-├── data/
-├── requirements.txt
-├── run.py
-└── README.md
+│   ├── gui/           # GUI components
+│   ├── ml/            # Machine learning models
+│   ├── utils/         # Utility functions
+│   └── data/          # Data processing
+├── tests/             # Test files
+├── docs/              # Documentation
+├── setup.py           # Package setup file
+├── requirements.txt   # Project dependencies
+├── README.md         # Project documentation
+└── LICENSE           # MIT License
+```
+
+## Development
+
+To set up the development environment:
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/ne3mer/ethicsupply.git
+cd ethicsupply
+```
+
+2. Create a virtual environment:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install development dependencies:
+
+```bash
+pip install -e ".[dev]"
 ```
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Author
+
+- Mohammad Afsharfar
+- Supervisor: Dr. Alpár Vera Noémi
 
 ## Acknowledgments
 
-- This project was developed as part of an MBA thesis on ethical AI in supply chain management
-- Special thanks to [Your University/Institution Name] for their support
+- Special thanks to all contributors and supporters
+- Built with PyQt6 and TensorFlow

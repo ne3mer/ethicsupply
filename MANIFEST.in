@@ -1,0 +1,9 @@
+include README.md
+include LICENSE
+include requirements.txt
+include run.py
+
+recursive-include src/gui *.py
+recursive-include src/ml *.py
+recursive-include src/utils *.py
+recursive-include src/data *.py 
