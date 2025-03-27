@@ -40,9 +40,6 @@ class DashboardPage(QWidget):
         # Create quick actions section
         self.create_quick_actions()
         
-        # Create recent activity section
-        self.create_recent_activity()
-        
         # Add spacer at the bottom
         self.layout.addStretch()
     
@@ -227,154 +224,6 @@ class DashboardPage(QWidget):
         # Add action frame to main layout
         self.layout.addWidget(action_frame)
     
-    def create_recent_activity(self):
-        """Create recent activity section."""
-        # Create frame for recent activity
-        activity_frame = QFrame()
-        activity_frame.setFrameShape(QFrame.Shape.StyledPanel)
-        activity_frame.setFrameShadow(QFrame.Shadow.Raised)
-        activity_frame.setStyleSheet("""
-            background-color: white;
-            border: 1px solid #DEE2E6;
-            border-radius: 8px;
-        """)
-        activity_layout = QVBoxLayout(activity_frame)
-        activity_layout.setContentsMargins(15, 15, 15, 15)
-        
-        # Create section title
-        section_title = QLabel("Recent Activity")
-        section_title.setStyleSheet("""
-            font-size: 18px;
-            font-weight: bold;
-            color: #212529;
-        """)
-        activity_layout.addWidget(section_title)
-        
-        # Create scroll area for activity items
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        scroll_area.setStyleSheet("""
-            background-color: transparent;
-            border: none;
-        """)
-        
-        # Create activity container
-        activity_container = QWidget()
-        activity_container_layout = QVBoxLayout(activity_container)
-        activity_container_layout.setContentsMargins(0, 0, 0, 0)
-        activity_container_layout.setSpacing(10)
-        
-        # Generate sample activity items
-        for i in range(5):
-            # Calculate random date and time
-            days_ago = random.randint(0, 14)
-            hours_ago = random.randint(0, 23)
-            minutes_ago = random.randint(0, 59)
-            timestamp = datetime.now() - timedelta(days=days_ago, hours=hours_ago, minutes=minutes_ago)
-            
-            # Create activity item
-            activity_item = self.create_activity_item(
-                f"Optimization #{5-i}",
-                f"Optimized supply chain with {random.randint(3, 10)} suppliers.",
-                timestamp.strftime("%Y-%m-%d %H:%M")
-            )
-            
-            # Add item to container layout
-            activity_container_layout.addWidget(activity_item)
-        
-        # Add container to scroll area
-        scroll_area.setWidget(activity_container)
-        
-        # Set fixed height for scroll area
-        scroll_area.setFixedHeight(250)
-        
-        # Add scroll area to activity layout
-        activity_layout.addWidget(scroll_area)
-        
-        # Add activity frame to main layout
-        self.layout.addWidget(activity_frame)
-    
-    def create_activity_item(self, title, description, timestamp):
-        """Create an activity item widget.
-        
-        Args:
-            title (str): Title of the activity.
-            description (str): Description of the activity.
-            timestamp (str): Timestamp of the activity.
-            
-        Returns:
-            QFrame: The activity item widget.
-        """
-        # Create item frame
-        item_frame = QFrame()
-        item_frame.setFrameShape(QFrame.Shape.StyledPanel)
-        item_frame.setStyleSheet("""
-            background-color: #F8F9FA;
-            border: 1px solid #E9ECEF;
-            border-radius: 8px;
-        """)
-        
-        # Create item layout
-        item_layout = QHBoxLayout(item_frame)
-        item_layout.setContentsMargins(15, 15, 15, 15)
-        
-        # Create item content layout
-        content_layout = QVBoxLayout()
-        content_layout.setSpacing(5)
-        
-        # Create title label
-        title_label = QLabel(title)
-        title_label.setStyleSheet("""
-            font-size: 16px;
-            font-weight: bold;
-            color: #212529;
-        """)
-        
-        # Create description label
-        description_label = QLabel(description)
-        description_label.setStyleSheet("""
-            font-size: 14px;
-            color: #6C757D;
-        """)
-        
-        # Create timestamp label
-        timestamp_label = QLabel(timestamp)
-        timestamp_label.setStyleSheet("""
-            font-size: 12px;
-            color: #6C757D;
-        """)
-        
-        # Add labels to content layout
-        content_layout.addWidget(title_label)
-        content_layout.addWidget(description_label)
-        content_layout.addWidget(timestamp_label)
-        
-        # Add content layout to item layout
-        item_layout.addLayout(content_layout, stretch=1)
-        
-        # Create view button
-        view_btn = QPushButton("View")
-        view_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #007BFF;
-                border: 1px solid #007BFF;
-                border-radius: 8px;
-                padding: 8px 15px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #E3F2FD;
-            }
-        """)
-        view_btn.clicked.connect(lambda: self.view_activity(title))
-        
-        # Add view button to item layout
-        item_layout.addWidget(view_btn)
-        
-        return item_frame
-    
     def get_main_window(self):
         """Get the main window from the parent widgets.
         
@@ -405,13 +254,71 @@ class DashboardPage(QWidget):
         if main_window:
             main_window.navigate_to(1)
     
-    def view_activity(self, activity_id):
-        """View details of an activity.
+    def create_dashboard_content(self, layout):
+        """Create the main dashboard content."""
+        # Create grid layout for metrics
+        metrics_grid = QGridLayout()
+        metrics_grid.setSpacing(20)
         
-        Args:
-            activity_id (str): ID of the activity to view.
-        """
-        # Navigate to results page through main window
-        main_window = self.get_main_window()
-        if main_window:
-            main_window.navigate_to(1) 
+        # Add metric cards
+        self.add_metric_card(metrics_grid, 0, 0, "Total Suppliers", "0", "suppliers")
+        self.add_metric_card(metrics_grid, 0, 1, "Average Cost", "$0.00", "cost")
+        self.add_metric_card(metrics_grid, 0, 2, "Average CO2", "0 kg", "co2")
+        self.add_metric_card(metrics_grid, 1, 0, "Average Delivery Time", "0 days", "delivery")
+        self.add_metric_card(metrics_grid, 1, 1, "Average Ethical Score", "0/100", "ethical")
+        self.add_metric_card(metrics_grid, 1, 2, "Optimization Status", "Not Started", "status")
+        
+        # Add metrics grid to main layout
+        layout.addLayout(metrics_grid)
+        
+        # Add stretch to push content to the top
+        layout.addStretch()
+    
+    def create_action_buttons(self, layout):
+        """Create action buttons for the dashboard."""
+        # Create button layout
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(15)
+        
+        # Create buttons
+        input_btn = QPushButton("Input Data")
+        input_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 15px;
+                font-size: 14px;
+                min-width: 150px;
+            }
+            QPushButton:hover {
+                background-color: #0056B3;
+            }
+        """)
+        input_btn.clicked.connect(lambda: self.main_window.navigate_to(1))
+        
+        results_btn = QPushButton("View Results")
+        results_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #007BFF;
+                border: 1px solid #007BFF;
+                border-radius: 8px;
+                padding: 10px 15px;
+                font-size: 14px;
+                min-width: 150px;
+            }
+            QPushButton:hover {
+                background-color: #E3F2FD;
+            }
+        """)
+        results_btn.clicked.connect(lambda: self.main_window.navigate_to(2))
+        
+        # Add buttons to layout
+        button_layout.addWidget(input_btn)
+        button_layout.addWidget(results_btn)
+        button_layout.addStretch()
+        
+        # Add button layout to main layout
+        layout.addLayout(button_layout) 

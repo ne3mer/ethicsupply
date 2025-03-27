@@ -303,9 +303,9 @@ class InputPage(QWidget):
                 )
                 return
         
-        # TODO: Process data with ML model
-        # For now, just navigate to results page
-        if main_window:
+        # Update results page with new data
+        if main_window and hasattr(main_window, 'results_page'):
+            main_window.results_page.update_results(suppliers_data)
             main_window.navigate_to(2)  # Navigate to results page
     
     def create_data_management(self):

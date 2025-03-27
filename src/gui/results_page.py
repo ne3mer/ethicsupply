@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
     QLabel, QFrame, QTabWidget, QTableWidget, QTableWidgetItem,
-    QHeaderView, QSizePolicy, QFileDialog, QMainWindow, QScrollArea
+    QHeaderView, QSizePolicy, QFileDialog, QMainWindow, QScrollArea, QSpinBox
 )
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QColor
@@ -75,41 +75,57 @@ class ResultsPage(QWidget):
             }
         """)
         
-        # Create and add supplier ranking tab (chart only)
+        # Set tab widget properties
+        self.tab_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.tab_widget.setMinimumHeight(700)  # Set minimum height for the tab widget
+        
+        # Create and add supplier ranking tab
         ranking_tab = QWidget()
         ranking_layout = QVBoxLayout(ranking_tab)
+        ranking_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        ranking_layout.setSpacing(0)  # Remove spacing
         self.create_supplier_ranking_chart(ranking_layout)
         self.tab_widget.addTab(ranking_tab, "Supplier Ranking")
         
         # Create and add supplier details tab
         details_tab = QWidget()
         details_layout = QVBoxLayout(details_tab)
+        details_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        details_layout.setSpacing(0)  # Remove spacing
         self.create_supplier_table(details_layout)
         self.tab_widget.addTab(details_tab, "Supplier Details")
         
         # Create and add explanation tab
         explanation_tab = QWidget()
         explanation_layout = QVBoxLayout(explanation_tab)
+        explanation_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        explanation_layout.setSpacing(0)  # Remove spacing
         self.create_explanation_content(explanation_layout)
         self.tab_widget.addTab(explanation_tab, "Explanation")
         
         # Create and add metrics tab
         metrics_tab = QWidget()
         metrics_layout = QVBoxLayout(metrics_tab)
+        metrics_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        metrics_layout.setSpacing(0)  # Remove spacing
         self.create_metrics_content(metrics_layout)
         self.tab_widget.addTab(metrics_tab, "Metrics")
         
         # Create and add trade-off chart tab
         tradeoff_tab = QWidget()
         tradeoff_layout = QVBoxLayout(tradeoff_tab)
+        tradeoff_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        tradeoff_layout.setSpacing(0)  # Remove spacing
         self.create_tradeoff_chart(tradeoff_layout)
-        self.tab_widget.addTab(tradeoff_tab, "Trade-off Chart")
+        self.tab_widget.addTab(tradeoff_tab, "Cost vs. CO2 Trade-off")
         
         # Create and add radar chart tab
         radar_tab = QWidget()
         radar_layout = QVBoxLayout(radar_tab)
+        radar_layout.setContentsMargins(0, 0, 0, 0)  # Remove margins
+        radar_layout.setSpacing(0)  # Remove spacing
         self.create_radar_chart(radar_layout)
-        self.tab_widget.addTab(radar_tab, "Radar Chart")
+        self.tab_widget.addTab(radar_tab, "Top 3 Suppliers Comparison")
         
         # Add tab widget to main layout
         self.layout.addWidget(self.tab_widget)
@@ -118,7 +134,7 @@ class ResultsPage(QWidget):
         """Create the supplier ranking chart."""
         # Create web view for Plotly chart
         chart_view = QWebEngineView()
-        chart_view.setMinimumHeight(400)
+        chart_view.setMinimumHeight(600)  # Increased height
         
         # Get top 10 suppliers
         top_suppliers = self.df.head(10)
@@ -158,6 +174,7 @@ class ResultsPage(QWidget):
             plot_bgcolor="white",
             yaxis=dict(range=[0, 105]),
             margin=dict(l=50, r=50, t=50, b=100),
+            height=600,  # Set fixed height
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -282,7 +299,7 @@ class ResultsPage(QWidget):
         """Create the metrics tab content."""
         # Create metrics chart
         chart_view = QWebEngineView()
-        chart_view.setMinimumHeight(400)
+        chart_view.setMinimumHeight(600)  # Increased height
         
         # Create figure
         fig = go.Figure()
@@ -309,6 +326,7 @@ class ResultsPage(QWidget):
             plot_bgcolor="white",
             yaxis=dict(title="Value"),
             margin=dict(l=50, r=50, t=50, b=50),
+            height=600,  # Set fixed height
             showlegend=False
         )
         
@@ -323,7 +341,7 @@ class ResultsPage(QWidget):
         """Create the trade-off chart tab content."""
         # Create scatter plot
         chart_view = QWebEngineView()
-        chart_view.setMinimumHeight(400)
+        chart_view.setMinimumHeight(600)  # Increased height
         
         # Create figure
         fig = go.Figure()
@@ -354,7 +372,8 @@ class ResultsPage(QWidget):
             xaxis_title="Cost ($)",
             yaxis_title="CO2 Emissions (kg)",
             plot_bgcolor="white",
-            margin=dict(l=50, r=50, t=50, b=50)
+            margin=dict(l=50, r=50, t=50, b=50),
+            height=600  # Set fixed height
         )
         
         # Convert to HTML and set in web view
@@ -368,10 +387,10 @@ class ResultsPage(QWidget):
         """Create the radar chart tab content."""
         # Create radar chart
         chart_view = QWebEngineView()
-        chart_view.setMinimumHeight(400)
+        chart_view.setMinimumHeight(600)  # Increased height
         
         # Get top 3 suppliers
-        top_3 = self.df.head(3)
+        top_suppliers = self.df.head(3)
         
         # Create figure
         fig = go.Figure()
@@ -379,7 +398,7 @@ class ResultsPage(QWidget):
         # Add radar chart for each supplier
         categories = ['Cost', 'CO2', 'Delivery Time', 'Ethical Score']
         
-        for i, row in top_3.iterrows():
+        for i, row in top_suppliers.iterrows():
             # Normalize values between 0 and 1
             values = [
                 1 - (row['cost'] - self.df['cost'].min()) / (self.df['cost'].max() - self.df['cost'].min()),
@@ -407,7 +426,8 @@ class ResultsPage(QWidget):
                 )
             ),
             showlegend=True,
-            margin=dict(l=50, r=50, t=50, b=50)
+            margin=dict(l=50, r=50, t=50, b=50),
+            height=600  # Set fixed height
         )
         
         # Convert to HTML and set in web view
@@ -416,6 +436,7 @@ class ResultsPage(QWidget):
         
         # Add chart to layout
         layout.addWidget(chart_view)
+        layout.addStretch()  # Add stretch to ensure chart takes full height
     
     def create_supplier_table(self, layout):
         """Create a table for supplier details."""
@@ -849,4 +870,55 @@ class ResultsPage(QWidget):
             """
             analysis_parts.append(analysis)
         
-        return "\n".join(analysis_parts) 
+        return "\n".join(analysis_parts)
+    
+    def update_results(self, suppliers_data):
+        """Update the results page with new supplier data.
+        
+        Args:
+            suppliers_data (list): List of supplier dictionaries.
+        """
+        # Clear existing tabs if they exist
+        if hasattr(self, 'tab_widget'):
+            self.tab_widget.clear()
+            self.tab_widget.deleteLater()
+        
+        # Create DataFrame from supplier data
+        self.df = pd.DataFrame(suppliers_data)
+        
+        # Normalize features for model input
+        normalized_df = self.df.copy()
+        for col in ['cost', 'co2', 'delivery_time']:
+            min_val = normalized_df[col].min()
+            max_val = normalized_df[col].max()
+            normalized_df[col] = (normalized_df[col] - min_val) / (max_val - min_val)
+        
+        # Invert cost, CO2, and delivery time (lower is better)
+        for col in ['cost', 'co2', 'delivery_time']:
+            normalized_df[col] = 1 - normalized_df[col]
+        
+        # Normalize ethical score
+        normalized_df['ethical_score'] = normalized_df['ethical_score'] / 100
+        
+        # Calculate predicted scores (simplified version without TensorFlow)
+        # In a real implementation, this would use a trained TensorFlow model
+        weights = {
+            'cost': 0.3,
+            'co2': 0.2,
+            'delivery_time': 0.2,
+            'ethical_score': 0.3
+        }
+        
+        # Calculate weighted scores
+        self.df['predicted_score'] = (
+            normalized_df['cost'] * weights['cost'] +
+            normalized_df['co2'] * weights['co2'] +
+            normalized_df['delivery_time'] * weights['delivery_time'] +
+            normalized_df['ethical_score'] * weights['ethical_score']
+        ) * 100
+        
+        # Sort by predicted score
+        self.df = self.df.sort_values('predicted_score', ascending=False)
+        
+        # Create new tabs with updated data
+        self.setup_tabs() 

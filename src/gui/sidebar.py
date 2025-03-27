@@ -3,7 +3,7 @@
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-    QLabel, QSpacerItem, QSizePolicy, QMainWindow
+    QLabel, QSpacerItem, QSizePolicy, QMainWindow, QFrame
 )
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QColor
@@ -37,97 +37,108 @@ class SidebarButton(QPushButton):
         """)
         self.setCheckable(True)
 
-class Sidebar(QWidget):
-    """Sidebar navigation for the application."""
+class Sidebar(QFrame):
+    """Sidebar widget with navigation buttons."""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        # Set widget properties
-        self.setObjectName("sidebar")
-        self.setFixedWidth(200)
+        # Set frame properties
+        self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setStyleSheet("""
-            QWidget#sidebar {
-                background-color: #FFFFFF;
+            QFrame {
+                background-color: white;
                 border-right: 1px solid #DEE2E6;
             }
         """)
+        self.setFixedWidth(250)
         
         # Create layout
         self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(20, 20, 20, 20)
+        self.layout.setSpacing(10)
         
-        # Create header
-        self.create_header()
+        # Add logo/title
+        title = QLabel("EthicSupply")
+        title.setStyleSheet("""
+            font-size: 24px;
+            font-weight: bold;
+            color: #212529;
+            margin-bottom: 20px;
+        """)
+        self.layout.addWidget(title)
         
         # Create navigation buttons
-        self.create_nav_buttons()
+        self.nav_buttons = []
         
-        # Add spacer at the bottom
-        self.layout.addSpacerItem(QSpacerItem(
-            20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
-        ))
+        # Dashboard button
+        dashboard_btn = self.create_nav_button("Dashboard", 0)
+        dashboard_btn.setChecked(True)  # Set as default selected
+        self.layout.addWidget(dashboard_btn)
+        
+        # Input button
+        input_btn = self.create_nav_button("Input Data", 1)
+        self.layout.addWidget(input_btn)
+        
+        # Results button
+        results_btn = self.create_nav_button("Results", 2)
+        self.layout.addWidget(results_btn)
+        
+        # Recent Activity button
+        activity_btn = self.create_nav_button("Recent Activity", 3)
+        self.layout.addWidget(activity_btn)
+        
+        # Settings button
+        settings_btn = self.create_nav_button("Settings", 4)
+        self.layout.addWidget(settings_btn)
+        
+        # Add stretch to push buttons to the top
+        self.layout.addStretch()
     
-    def create_header(self):
-        """Create the header section of the sidebar."""
-        # Create header widget
-        header_widget = QWidget()
-        header_widget.setFixedHeight(100)
-        header_widget.setStyleSheet("""
-            background-color: #007BFF;
-            padding: 10px;
+    def create_nav_button(self, text, index):
+        """Create a navigation button.
+        
+        Args:
+            text (str): Button text.
+            index (int): Page index to navigate to.
+            
+        Returns:
+            QPushButton: The created navigation button.
+        """
+        button = QPushButton(text)
+        button.setCheckable(True)
+        button.setStyleSheet("""
+            QPushButton {
+                text-align: left;
+                padding: 12px 15px;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                color: #6C757D;
+                background-color: transparent;
+            }
+            QPushButton:hover {
+                background-color: #E3F2FD;
+                color: #007BFF;
+            }
+            QPushButton:checked {
+                background-color: #E3F2FD;
+                color: #007BFF;
+                font-weight: bold;
+            }
         """)
-        
-        # Create header layout
-        header_layout = QVBoxLayout(header_widget)
-        header_layout.setContentsMargins(15, 15, 15, 15)
-        header_layout.setSpacing(5)
-        
-        # Create title label
-        title_label = QLabel("EthicSupply")
-        title_label.setStyleSheet("""
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-        """)
-        
-        # Create subtitle label
-        subtitle_label = QLabel("AI Supply Chain Optimizer")
-        subtitle_label.setStyleSheet("""
-            color: white;
-            font-size: 12px;
-        """)
-        
-        # Add labels to header layout
-        header_layout.addWidget(title_label)
-        header_layout.addWidget(subtitle_label)
-        
-        # Add header to sidebar layout
-        self.layout.addWidget(header_widget)
+        button.clicked.connect(lambda: self.navigate_to(index))
+        self.nav_buttons.append(button)
+        return button
     
-    def create_nav_buttons(self):
-        """Create the navigation buttons for the sidebar."""
-        # Create buttons
-        self.dashboard_btn = SidebarButton("Dashboard")
-        self.input_data_btn = SidebarButton("Input Data")
-        self.results_btn = SidebarButton("Results")
-        self.settings_btn = SidebarButton("Settings")
+    def set_active_button(self, index):
+        """Set the active navigation button.
         
-        # Add buttons to layout
-        self.layout.addWidget(self.dashboard_btn)
-        self.layout.addWidget(self.input_data_btn)
-        self.layout.addWidget(self.results_btn)
-        self.layout.addWidget(self.settings_btn)
-        
-        # Connect signals to slots
-        self.dashboard_btn.clicked.connect(lambda: self.navigate_to(0))  # Dashboard page
-        self.input_data_btn.clicked.connect(lambda: self.navigate_to(1))  # Input page
-        self.results_btn.clicked.connect(lambda: self.navigate_to(2))  # Results page
-        self.settings_btn.clicked.connect(lambda: self.navigate_to(3))  # Settings/About page
-        
-        # Set default active button
-        self.dashboard_btn.setChecked(True)
+        Args:
+            index (int): Index of the button to set as active.
+        """
+        for i, button in enumerate(self.nav_buttons):
+            button.setChecked(i == index)
     
     def get_main_window(self):
         """Get the main window from the parent widgets.
@@ -141,34 +152,12 @@ class Sidebar(QWidget):
         return parent
     
     def navigate_to(self, index):
-        """Navigate to the page corresponding to the given index.
+        """Navigate to the specified page.
         
         Args:
             index (int): Index of the page to navigate to.
         """
-        # Get the main window and navigate
         main_window = self.get_main_window()
         if main_window:
             main_window.navigate_to(index)
-    
-    def set_active_button(self, index):
-        """Set the active button based on the current page index.
-        
-        Args:
-            index (int): Index of the current page.
-        """
-        # Reset all buttons
-        self.dashboard_btn.setChecked(False)
-        self.input_data_btn.setChecked(False)
-        self.results_btn.setChecked(False)
-        self.settings_btn.setChecked(False)
-        
-        # Set the active button
-        if index == 0:
-            self.dashboard_btn.setChecked(True)
-        elif index == 1:
-            self.input_data_btn.setChecked(True)
-        elif index == 2:
-            self.results_btn.setChecked(True)
-        elif index == 3:
-            self.settings_btn.setChecked(True) 
+            self.set_active_button(index) 
