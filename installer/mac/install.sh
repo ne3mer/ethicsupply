@@ -39,6 +39,7 @@ cat > ~/Desktop/EthicSupply.command << EOL
 #!/bin/bash
 cd "${APP_DIR}"
 source venv/bin/activate
+export QT_MAC_WANTS_LAYER=1
 python3 run.py
 EOL
 chmod +x ~/Desktop/EthicSupply.command
@@ -49,6 +50,7 @@ cat > /Applications/EthicSupply.command << EOL
 #!/bin/bash
 cd "${APP_DIR}"
 source venv/bin/activate
+export QT_MAC_WANTS_LAYER=1
 python3 run.py
 EOL
 chmod +x /Applications/EthicSupply.command
@@ -82,6 +84,11 @@ cat > EthicSupply.app/Contents/Info.plist << EOL
     <string>public.app-category.business</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon.icns</string>
+    <key>LSEnvironment</key>
+    <dict>
+        <key>QT_MAC_WANTS_LAYER</key>
+        <string>1</string>
+    </dict>
 </dict>
 </plist>
 EOL
@@ -91,6 +98,7 @@ cat > EthicSupply.app/Contents/MacOS/EthicSupply << EOL
 #!/bin/bash
 cd "${APP_DIR}"
 source venv/bin/activate
+export QT_MAC_WANTS_LAYER=1
 python3 run.py
 EOL
 chmod +x EthicSupply.app/Contents/MacOS/EthicSupply
