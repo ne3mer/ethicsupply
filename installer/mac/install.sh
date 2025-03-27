@@ -26,8 +26,8 @@ fi
 
 # Create virtual environment
 echo -e "${BLUE}Creating virtual environment...${NC}"
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv "${APP_DIR}/venv"
+source "${APP_DIR}/venv/bin/activate"
 
 # Install dependencies
 echo -e "${BLUE}Installing dependencies...${NC}"
@@ -38,7 +38,7 @@ echo -e "${BLUE}Creating desktop shortcut...${NC}"
 cat > ~/Desktop/EthicSupply.command << EOL
 #!/bin/bash
 cd "${APP_DIR}"
-source venv/bin/activate
+source "${APP_DIR}/venv/bin/activate"
 export QT_MAC_WANTS_LAYER=1
 python3 run.py
 EOL
@@ -49,7 +49,7 @@ echo -e "${BLUE}Creating Applications shortcut...${NC}"
 cat > /Applications/EthicSupply.command << EOL
 #!/bin/bash
 cd "${APP_DIR}"
-source venv/bin/activate
+source "${APP_DIR}/venv/bin/activate"
 export QT_MAC_WANTS_LAYER=1
 python3 run.py
 EOL
@@ -57,11 +57,12 @@ chmod +x /Applications/EthicSupply.command
 
 # Create an app bundle
 echo -e "${BLUE}Creating application bundle...${NC}"
-mkdir -p EthicSupply.app/Contents/MacOS
-mkdir -p EthicSupply.app/Contents/Resources
+APP_BUNDLE="${APP_DIR}/EthicSupply.app"
+mkdir -p "${APP_BUNDLE}/Contents/MacOS"
+mkdir -p "${APP_BUNDLE}/Contents/Resources"
 
 # Create Info.plist
-cat > EthicSupply.app/Contents/Info.plist << EOL
+cat > "${APP_BUNDLE}/Contents/Info.plist" << EOL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -88,27 +89,39 @@ cat > EthicSupply.app/Contents/Info.plist << EOL
     <dict>
         <key>QT_MAC_WANTS_LAYER</key>
         <string>1</string>
+        <key>PYTHONPATH</key>
+        <string>${APP_DIR}</string>
     </dict>
 </dict>
 </plist>
 EOL
 
 # Create the main script
-cat > EthicSupply.app/Contents/MacOS/EthicSupply << EOL
+cat > "${APP_BUNDLE}/Contents/MacOS/EthicSupply" << EOL
 #!/bin/bash
+export PATH="${APP_DIR}/venv/bin:$PATH"
+export PYTHONPATH="${APP_DIR}:$PYTHONPATH"
 cd "${APP_DIR}"
-source venv/bin/activate
+source "${APP_DIR}/venv/bin/activate"
 export QT_MAC_WANTS_LAYER=1
-python3 run.py
+exec python3 run.py
 EOL
-chmod +x EthicSupply.app/Contents/MacOS/EthicSupply
 
 # Set proper permissions
-chmod -R 755 EthicSupply.app
-chmod -R 644 EthicSupply.app/Contents/Info.plist
+chmod 755 "${APP_BUNDLE}/Contents/MacOS/EthicSupply"
+chmod 644 "${APP_BUNDLE}/Contents/Info.plist"
+chmod -R 755 "${APP_BUNDLE}/Contents"
+chmod -R 755 "${APP_DIR}/venv"
+
+# Set proper ownership
+chown -R $(whoami):staff "${APP_BUNDLE}"
+chown -R $(whoami):staff "${APP_DIR}/venv"
 
 # Move the app bundle to Applications
-mv EthicSupply.app /Applications/
+rm -rf "/Applications/EthicSupply.app"
+cp -R "${APP_BUNDLE}" "/Applications/"
+chmod -R 755 "/Applications/EthicSupply.app"
+chown -R $(whoami):staff "/Applications/EthicSupply.app"
 
 echo -e "${GREEN}Installation completed successfully!${NC}"
 echo -e "You can now launch EthicSupply from:"
