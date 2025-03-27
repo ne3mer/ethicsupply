@@ -16,7 +16,7 @@ fi
 
 # Check Python version
 PYTHON_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-if (( $(echo "$PYTHON_VERSION < 3.8" | bc -l) )); then
+if [ "$(printf '%s\n' "3.8" "$PYTHON_VERSION" | sort -V | head -n1)" != "3.8" ]; then
     echo -e "${RED}Python 3.8 or higher is required. Current version: $PYTHON_VERSION${NC}"
     exit 1
 fi
