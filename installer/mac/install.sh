@@ -31,7 +31,7 @@ source venv/bin/activate
 
 # Install dependencies
 echo -e "${BLUE}Installing dependencies...${NC}"
-pip install PyQt6>=6.4.0 pandas>=1.5.0 numpy>=1.21.0 plotly>=5.13.0 tensorflow>=2.12.0 scikit-learn>=1.0.0
+pip install PyQt6>=6.4.0 PyQt6-WebEngine>=6.4.0 pandas>=1.5.0 numpy>=1.21.0 plotly>=5.13.0 tensorflow>=2.12.0 scikit-learn>=1.0.0
 
 # Create desktop shortcut
 echo -e "${BLUE}Creating desktop shortcut...${NC}"
