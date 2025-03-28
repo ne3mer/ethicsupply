@@ -72,35 +72,39 @@ class Sidebar(QFrame):
         self.nav_buttons = []
         
         # Dashboard button
-        dashboard_btn = self.create_nav_button("Dashboard", 0)
+        dashboard_btn = self.create_nav_button("Dashboard", 'dashboard')
         dashboard_btn.setChecked(True)  # Set as default selected
         self.layout.addWidget(dashboard_btn)
         
         # Input button
-        input_btn = self.create_nav_button("Input Data", 1)
+        input_btn = self.create_nav_button("Input Data", 'input')
         self.layout.addWidget(input_btn)
         
         # Results button
-        results_btn = self.create_nav_button("Results", 2)
+        results_btn = self.create_nav_button("Results", 'results')
         self.layout.addWidget(results_btn)
         
         # Recent Activity button
-        activity_btn = self.create_nav_button("Recent Activity", 3)
+        activity_btn = self.create_nav_button("Recent Activity", 'recent_activity')
         self.layout.addWidget(activity_btn)
         
         # Settings button
-        settings_btn = self.create_nav_button("Settings", 4)
+        settings_btn = self.create_nav_button("Settings", 'settings')
         self.layout.addWidget(settings_btn)
+        
+        # About button
+        about_btn = self.create_nav_button("About", 'about')
+        self.layout.addWidget(about_btn)
         
         # Add stretch to push buttons to the top
         self.layout.addStretch()
     
-    def create_nav_button(self, text, index):
+    def create_nav_button(self, text, page_name):
         """Create a navigation button.
         
         Args:
             text (str): Button text.
-            index (int): Page index to navigate to.
+            page_name (str): Name of the page to navigate to.
             
         Returns:
             QPushButton: The created navigation button.
@@ -127,18 +131,18 @@ class Sidebar(QFrame):
                 font-weight: bold;
             }
         """)
-        button.clicked.connect(lambda: self.navigate_to(index))
-        self.nav_buttons.append(button)
+        button.clicked.connect(lambda: self.navigate_to(page_name))
+        self.nav_buttons.append((page_name, button))
         return button
     
-    def set_active_button(self, index):
+    def set_active_button(self, page_name):
         """Set the active navigation button.
         
         Args:
-            index (int): Index of the button to set as active.
+            page_name (str): Name of the page to set as active.
         """
-        for i, button in enumerate(self.nav_buttons):
-            button.setChecked(i == index)
+        for btn_page_name, button in self.nav_buttons:
+            button.setChecked(btn_page_name == page_name)
     
     def get_main_window(self):
         """Get the main window from the parent widgets.
@@ -151,13 +155,13 @@ class Sidebar(QFrame):
             parent = parent.parent()
         return parent
     
-    def navigate_to(self, index):
+    def navigate_to(self, page_name):
         """Navigate to the specified page.
         
         Args:
-            index (int): Index of the page to navigate to.
+            page_name (str): Name of the page to navigate to.
         """
         main_window = self.get_main_window()
         if main_window:
-            main_window.navigate_to(index)
-            self.set_active_button(index) 
+            main_window.navigate_to(page_name)
+            self.set_active_button(page_name) 

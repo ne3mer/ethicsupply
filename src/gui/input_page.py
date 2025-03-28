@@ -238,14 +238,23 @@ class InputPage(QWidget):
     
     def create_initial_forms(self):
         """Create initial supplier forms based on settings."""
-        main_window = self.get_main_window()
-        if main_window and hasattr(main_window, 'settings_page'):
-            num_suppliers = main_window.settings_page.num_suppliers.value()
-        else:
-            num_suppliers = 5  # Default value
+        # Create default number of forms first
+        num_suppliers = 5  # Default value
         
         for i in range(1, num_suppliers + 1):
             self.add_supplier_form()
+        
+        # Update settings after initialization
+        main_window = self.get_main_window()
+        if main_window and hasattr(main_window, 'pages'):
+            settings = main_window.pages['settings']
+            num_suppliers = settings.num_suppliers.value()
+            
+            # Adjust number of forms if needed
+            while len(self.supplier_forms) < num_suppliers:
+                self.add_supplier_form()
+            while len(self.supplier_forms) > num_suppliers:
+                self.remove_supplier_form()
     
     def add_supplier_form(self):
         """Add a new supplier form."""
@@ -256,8 +265,8 @@ class InputPage(QWidget):
         
         # Update form ranges based on settings
         main_window = self.get_main_window()
-        if main_window and hasattr(main_window, 'settings_page'):
-            settings = main_window.settings_page
+        if main_window and hasattr(main_window, 'pages'):
+            settings = main_window.pages['settings']
             form.cost.setRange(settings.min_cost.value(), settings.max_cost.value())
             form.ethical_score.setMinimum(settings.min_ethical.value())
     
@@ -279,7 +288,7 @@ class InputPage(QWidget):
         """Navigate back to the dashboard."""
         main_window = self.get_main_window()
         if main_window:
-            main_window.navigate_to(0)
+            main_window.navigate_to('dashboard')
     
     def submit_data(self):
         """Submit the supplier data for optimization."""
@@ -289,8 +298,9 @@ class InputPage(QWidget):
         # Get minimum ethical score from settings
         main_window = self.get_main_window()
         min_ethical = 50  # Default value
-        if main_window and hasattr(main_window, 'settings_page'):
-            min_ethical = main_window.settings_page.min_ethical.value()
+        if main_window and hasattr(main_window, 'pages'):
+            settings = main_window.pages['settings']
+            min_ethical = settings.min_ethical.value()
         
         # Validate data
         for supplier in suppliers_data:
@@ -304,9 +314,9 @@ class InputPage(QWidget):
                 return
         
         # Update results page with new data
-        if main_window and hasattr(main_window, 'results_page'):
-            main_window.results_page.update_results(suppliers_data)
-            main_window.navigate_to(2)  # Navigate to results page
+        if main_window and hasattr(main_window, 'pages'):
+            main_window.pages['results'].update_results(suppliers_data)
+            main_window.navigate_to('results')
     
     def create_data_management(self):
         """Create buttons for data management."""
@@ -375,7 +385,7 @@ class InputPage(QWidget):
     def generate_sample_data(self):
         """Generate random sample data for all supplier forms."""
         main_window = self.get_main_window()
-        settings = main_window.settings_page if main_window else None
+        settings = main_window.pages['settings'] if main_window else None
         
         for form in self.supplier_forms:
             # Get ranges from settings if available

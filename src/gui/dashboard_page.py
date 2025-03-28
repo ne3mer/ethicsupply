@@ -237,10 +237,10 @@ class DashboardPage(QWidget):
     
     def start_new_optimization(self):
         """Start a new optimization process."""
-        # Navigate to results page through main window
+        # Navigate to input page through main window
         main_window = self.get_main_window()
         if main_window:
-            main_window.navigate_to(1)
+            main_window.navigate_to('input')
     
     def load_existing_data(self):
         """Load existing data from a file."""
@@ -248,11 +248,11 @@ class DashboardPage(QWidget):
         pass
     
     def load_sample_data(self):
-        """Load sample data and navigate to results page."""
-        # Navigate to results page through main window
+        """Load sample data and navigate to input page."""
+        # Navigate to input page through main window
         main_window = self.get_main_window()
         if main_window:
-            main_window.navigate_to(1)
+            main_window.navigate_to('input')
     
     def create_dashboard_content(self, layout):
         """Create the main dashboard content."""
@@ -296,7 +296,7 @@ class DashboardPage(QWidget):
                 background-color: #0056B3;
             }
         """)
-        input_btn.clicked.connect(lambda: self.main_window.navigate_to(1))
+        input_btn.clicked.connect(lambda: self.get_main_window().navigate_to('input'))
         
         results_btn = QPushButton("View Results")
         results_btn.setStyleSheet("""
@@ -313,7 +313,7 @@ class DashboardPage(QWidget):
                 background-color: #E3F2FD;
             }
         """)
-        results_btn.clicked.connect(lambda: self.main_window.navigate_to(2))
+        results_btn.clicked.connect(lambda: self.get_main_window().navigate_to('results'))
         
         # Add buttons to layout
         button_layout.addWidget(input_btn)

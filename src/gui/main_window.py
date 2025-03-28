@@ -24,57 +24,48 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         # Set window properties
-        self.setWindowTitle("Ethical AI Supply Chain Optimizer")
+        self.setWindowTitle("EthicSupply")
         self.setMinimumSize(1200, 800)
         
-        # Create central widget
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        
-        # Create main layout
-        main_layout = QHBoxLayout(central_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
+        # Create main widget and layout
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        layout = QHBoxLayout(main_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         
         # Create sidebar
         self.sidebar = Sidebar(self)
-        main_layout.addWidget(self.sidebar)
+        layout.addWidget(self.sidebar)
         
         # Create content area
-        self.content_area = QStackedWidget()
-        self.content_area.setStyleSheet("""
-            QStackedWidget {
-                background-color: #F8F9FA;
-            }
-        """)
-        main_layout.addWidget(self.content_area)
+        self.content_area = QWidget()
+        self.content_area.setLayout(QVBoxLayout())
+        self.content_area.layout().setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.content_area)
         
         # Create pages
-        self.dashboard_page = DashboardPage(self)
-        self.input_page = InputPage(self)
-        self.results_page = ResultsPage(self)
-        self.recent_activity_page = RecentActivityPage(self)
-        self.settings_page = SettingsPage(self)
-        self.about_page = AboutPage(self)
+        self.pages = {
+            'dashboard': DashboardPage(self),
+            'input': InputPage(self),
+            'results': ResultsPage(self),
+            'recent_activity': RecentActivityPage(self),
+            'settings': SettingsPage(self),
+            'about': AboutPage(self)
+        }
         
         # Add pages to content area
-        self.content_area.addWidget(self.dashboard_page)
-        self.content_area.addWidget(self.input_page)
-        self.content_area.addWidget(self.results_page)
-        self.content_area.addWidget(self.recent_activity_page)
-        self.content_area.addWidget(self.settings_page)
-        self.content_area.addWidget(self.about_page)
+        for page in self.pages.values():
+            self.content_area.layout().addWidget(page)
+            page.hide()
         
-        # Create status bar
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
-        self.status_bar.setStyleSheet("""
-            QStatusBar {
-                background-color: #F8F9FA;
-                color: #6C757D;
-                padding: 5px;
-            }
-        """)
+        # Set up status bar
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
+        self.statusBar.showMessage("Ready")
+        
+        # Show dashboard by default
+        self.navigate_to('dashboard')
         
         # Set window style
         self.setStyleSheet("""
@@ -83,25 +74,26 @@ class MainWindow(QMainWindow):
             }
         """)
     
-    def navigate_to(self, index):
-        """Navigate to the page at the given index.
-        
-        Args:
-            index (int): Index of the page to navigate to.
-        """
-        self.content_area.setCurrentIndex(index)
-        self.sidebar.set_active_button(index)
-        
-        # Update status bar
-        status_messages = [
-            "Dashboard - Overview of your supply chain optimization",
-            "Input Data - Add or modify supplier information",
-            "Results - View optimization results and analysis",
-            "Recent Activity - Track your latest actions and updates",
-            "Settings - Configure application settings",
-            "About - Information about EthicSupply"
-        ]
-        self.status_bar.showMessage(status_messages[index])
+    def navigate_to(self, page_name):
+        """Navigate to the specified page."""
+        if page_name in self.pages:
+            # Hide all pages
+            for page in self.pages.values():
+                page.hide()
+            
+            # Show selected page
+            self.pages[page_name].show()
+            
+            # Update status bar
+            status_messages = {
+                'dashboard': "Dashboard - View key metrics and start new optimizations",
+                'input': "Input - Add or modify supplier data",
+                'results': "Results - View optimization results and supplier comparisons",
+                'recent_activity': "Recent Activity - View recent actions and history",
+                'settings': "Settings - Configure application preferences",
+                'about': "About - Learn more about EthicSupply"
+            }
+            self.statusBar.showMessage(status_messages.get(page_name, "Ready"))
     
     def show_status_message(self, message, timeout=5000):
         """Show a message in the status bar.
@@ -110,4 +102,4 @@ class MainWindow(QMainWindow):
             message (str): Message to display.
             timeout (int): Time in milliseconds before the message disappears.
         """
-        self.status_bar.showMessage(message, timeout) 
+        self.statusBar.showMessage(message, timeout) 
