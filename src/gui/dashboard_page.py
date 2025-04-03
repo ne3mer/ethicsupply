@@ -83,30 +83,63 @@ class DashboardPage(QWidget):
         Args:
             web_view (QWebEngineView): The web view to display the chart in.
         """
-        # Generate sample data for last 7 days
-        dates = [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(6, -1, -1)]
+        # Get real data from database
+        main_window = self.get_main_window()
+        if not main_window or not hasattr(main_window, 'db'):
+            return
+            
+        # Get optimization trends from database
+        trends_df = main_window.db.get_optimization_trends(limit=7)
         
-        # Sample data for costs, CO2, and ethical scores
-        costs = [random.uniform(400, 800) for _ in range(7)]
-        co2 = [random.uniform(200, 400) for _ in range(7)]
-        ethical = [random.uniform(60, 90) for _ in range(7)]
+        if trends_df.empty:
+            # Show "No data" message if no optimizations exist
+            fig = go.Figure()
+            fig.add_annotation(
+                text="No optimization data available",
+                xref="paper",
+                yref="paper",
+                showarrow=False,
+                font=dict(size=14)
+            )
+            fig.update_layout(
+                plot_bgcolor="white",
+                margin=dict(l=50, r=50, t=30, b=80),
+            )
+            html = fig.to_html(include_plotlyjs='cdn')
+            web_view.setHtml(html)
+            return
         
         # Create subplot figure
         fig = make_subplots(specs=[[{"secondary_y": True}]])
         
         # Add traces
         fig.add_trace(
-            go.Scatter(x=dates, y=costs, name="Average Cost ($)", line=dict(color="#007BFF", width=3)),
+            go.Scatter(
+                x=trends_df['timestamp'],
+                y=trends_df['avg_cost'],
+                name="Average Cost ($)",
+                line=dict(color="#007BFF", width=3)
+            ),
             secondary_y=False,
         )
         
         fig.add_trace(
-            go.Scatter(x=dates, y=co2, name="Average CO2 (kg)", line=dict(color="#28A745", width=3)),
+            go.Scatter(
+                x=trends_df['timestamp'],
+                y=trends_df['avg_co2'],
+                name="Average CO2 (kg)",
+                line=dict(color="#28A745", width=3)
+            ),
             secondary_y=False,
         )
         
         fig.add_trace(
-            go.Scatter(x=dates, y=ethical, name="Average Ethical Score", line=dict(color="#6610F2", width=3)),
+            go.Scatter(
+                x=trends_df['timestamp'],
+                y=trends_df['avg_ethical'],
+                name="Average Ethical Score",
+                line=dict(color="#6610F2", width=3)
+            ),
             secondary_y=True,
         )
         

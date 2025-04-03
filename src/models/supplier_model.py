@@ -252,6 +252,10 @@ class SupplierOptimizer:
         # Get predictions
         predictions = self.model.predict(X)
         
+        # Scale predictions to 0-100 range for consistency
+        predictions = predictions * 100
+        predictions = np.clip(predictions, 0, 100)
+        
         # Apply ethical constraint (exclude suppliers with ethical score < 50)
         valid_indices = [
             i for i, supplier in enumerate(suppliers_data)

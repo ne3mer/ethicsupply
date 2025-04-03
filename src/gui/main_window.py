@@ -16,12 +16,16 @@ from .settings_page import SettingsPage
 from .about_page import AboutPage
 from .recent_activity_page import RecentActivityPage
 from .sidebar import Sidebar
+from src.data.database_pool import Database
 
 class MainWindow(QMainWindow):
     """Main window of the application."""
     
     def __init__(self):
         super().__init__()
+        
+        # Initialize database
+        self.db = Database()
         
         # Set window properties
         self.setWindowTitle("EthicSupply")
@@ -67,6 +71,9 @@ class MainWindow(QMainWindow):
         # Show dashboard by default
         self.navigate_to('dashboard')
         
+        # Log application start
+        self.db.log_activity('start', 'Application started')
+        
         # Set window style
         self.setStyleSheet("""
             QMainWindow {
@@ -94,6 +101,13 @@ class MainWindow(QMainWindow):
                 'about': "About - Learn more about EthicSupply"
             }
             self.statusBar.showMessage(status_messages.get(page_name, "Ready"))
+            
+            # Log navigation
+            self.db.log_activity('navigation', f'Navigated to {page_name} page')
+            
+            # Refresh recent activity page if it's visible
+            if page_name == 'recent_activity':
+                self.pages['recent_activity'].refresh_activities()
     
     def show_status_message(self, message, timeout=5000):
         """Show a message in the status bar.
@@ -102,4 +116,8 @@ class MainWindow(QMainWindow):
             message (str): Message to display.
             timeout (int): Time in milliseconds before the message disappears.
         """
-        self.statusBar.showMessage(message, timeout) 
+        self.statusBar.showMessage(message, timeout)
+        
+        # Log status message if it's not a temporary message
+        if timeout == 0:  # Permanent message
+            self.db.log_activity('status', message) 

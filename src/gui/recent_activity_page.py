@@ -8,12 +8,17 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from datetime import datetime, timedelta
+import pandas as pd
+from src.data.database_pool import Database
 
 class RecentActivityPage(QWidget):
     """Page to display recent activity in the application."""
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # Initialize database
+        self.db = Database()
         
         # Create main layout
         self.layout = QVBoxLayout(self)
@@ -30,10 +35,10 @@ class RecentActivityPage(QWidget):
         self.layout.addWidget(self.title_label)
         
         # Create scroll area for activity feed
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setStyleSheet("""
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setStyleSheet("""
             QScrollArea {
                 border: none;
                 background: transparent;
@@ -55,36 +60,74 @@ class RecentActivityPage(QWidget):
         """)
         
         # Create container widget for activity items
-        container = QWidget()
-        container_layout = QVBoxLayout(container)
-        container_layout.setContentsMargins(0, 0, 0, 0)
-        container_layout.setSpacing(15)
-        
-        # Add activity items with timestamps
-        self.add_activity_item(container_layout, "New supplier data submitted", "5 minutes ago", "input")
-        self.add_activity_item(container_layout, "Optimization completed", "1 hour ago", "optimize")
-        self.add_activity_item(container_layout, "Results exported to CSV", "2 hours ago", "export")
-        self.add_activity_item(container_layout, "New supplier added", "3 hours ago", "add")
-        self.add_activity_item(container_layout, "Optimization parameters updated", "5 hours ago", "settings")
-        self.add_activity_item(container_layout, "Results page refreshed", "1 day ago", "refresh")
-        self.add_activity_item(container_layout, "New optimization started", "1 day ago", "optimize")
-        self.add_activity_item(container_layout, "Supplier data updated", "2 days ago", "update")
-        self.add_activity_item(container_layout, "Results exported to PDF", "2 days ago", "export")
-        self.add_activity_item(container_layout, "Application started", "3 days ago", "start")
-        
-        # Add stretch to push items to the top
-        container_layout.addStretch()
+        self.container = QWidget()
+        self.container_layout = QVBoxLayout(self.container)
+        self.container_layout.setContentsMargins(0, 0, 0, 0)
+        self.container_layout.setSpacing(15)
         
         # Set container as scroll area widget
-        scroll.setWidget(container)
+        self.scroll.setWidget(self.container)
         
         # Add scroll area to main layout
-        self.layout.addWidget(scroll)
+        self.layout.addWidget(self.scroll)
         
         # Create back button
         self.create_back_button()
+        
+        # Load initial activities
+        self.refresh_activities()
     
-    def add_activity_item(self, layout, activity_text, time_text, activity_type):
+    def refresh_activities(self):
+        """Refresh the activity feed with latest data from the database."""
+        # Clear existing activities
+        while self.container_layout.count():
+            item = self.container_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # Get recent activities from database
+        activities_df = self.db.get_recent_activities(limit=10)
+        
+        if activities_df.empty:
+            # Add "No activities" message
+            no_activities_label = QLabel("No recent activities")
+            no_activities_label.setStyleSheet("""
+                font-size: 14px;
+                color: #6C757D;
+                font-style: italic;
+            """)
+            no_activities_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.container_layout.addWidget(no_activities_label)
+        else:
+            # Add each activity
+            for _, activity in activities_df.iterrows():
+                # Convert timestamp to relative time
+                timestamp = datetime.strptime(activity['timestamp'], "%Y-%m-%d %H:%M:%S")
+                time_diff = datetime.now() - timestamp
+                
+                if time_diff.days > 0:
+                    time_text = f"{time_diff.days} day{'s' if time_diff.days != 1 else ''} ago"
+                elif time_diff.seconds >= 3600:
+                    hours = time_diff.seconds // 3600
+                    time_text = f"{hours} hour{'s' if hours != 1 else ''} ago"
+                elif time_diff.seconds >= 60:
+                    minutes = time_diff.seconds // 60
+                    time_text = f"{minutes} minute{'s' if minutes != 1 else ''} ago"
+                else:
+                    time_text = "Just now"
+                
+                self.add_activity_item(
+                    self.container_layout,
+                    activity['description'],
+                    time_text,
+                    activity['activity_type'],
+                    activity['details']
+                )
+        
+        # Add stretch to push items to the top
+        self.container_layout.addStretch()
+    
+    def add_activity_item(self, layout, activity_text, time_text, activity_type, details=None):
         """Add an activity item to the layout.
         
         Args:
@@ -92,6 +135,7 @@ class RecentActivityPage(QWidget):
             activity_text (str): Text describing the activity.
             time_text (str): Text showing when the activity occurred.
             activity_type (str): Type of activity for icon and color.
+            details (str, optional): Additional details about the activity.
         """
         # Create activity frame
         frame = QFrame()
@@ -109,9 +153,13 @@ class RecentActivityPage(QWidget):
         """)
         
         # Create frame layout
-        frame_layout = QHBoxLayout(frame)
+        frame_layout = QVBoxLayout(frame)
         frame_layout.setContentsMargins(15, 10, 15, 10)
-        frame_layout.setSpacing(15)
+        frame_layout.setSpacing(5)
+        
+        # Create top row layout
+        top_layout = QHBoxLayout()
+        top_layout.setSpacing(15)
         
         # Set icon and color based on activity type
         icon_colors = {
@@ -131,7 +179,7 @@ class RecentActivityPage(QWidget):
             color: {icon_colors.get(activity_type, '#6C757D')};
             font-size: 20px;
         """)
-        frame_layout.addWidget(icon_label)
+        top_layout.addWidget(icon_label)
         
         # Create activity text
         activity_label = QLabel(activity_text)
@@ -139,10 +187,10 @@ class RecentActivityPage(QWidget):
             font-size: 14px;
             color: #212529;
         """)
-        frame_layout.addWidget(activity_label)
+        top_layout.addWidget(activity_label)
         
         # Add stretch to push time to the right
-        frame_layout.addStretch()
+        top_layout.addStretch()
         
         # Create time text
         time_label = QLabel(time_text)
@@ -150,7 +198,21 @@ class RecentActivityPage(QWidget):
             font-size: 12px;
             color: #6C757D;
         """)
-        frame_layout.addWidget(time_label)
+        top_layout.addWidget(time_label)
+        
+        # Add top layout to frame layout
+        frame_layout.addLayout(top_layout)
+        
+        # Add details if available
+        if details:
+            details_label = QLabel(details)
+            details_label.setStyleSheet("""
+                font-size: 12px;
+                color: #6C757D;
+                margin-left: 25px;
+            """)
+            details_label.setWordWrap(True)
+            frame_layout.addWidget(details_label)
         
         # Add frame to layout
         layout.addWidget(frame)

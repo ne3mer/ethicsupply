@@ -1,1 +1,3 @@
-# Data package 
+"""
+Data management package for EthicSupply.
+""" 

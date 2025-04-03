@@ -313,6 +313,14 @@ class InputPage(QWidget):
                 )
                 return
         
+        # Log activity
+        if main_window and hasattr(main_window, 'db'):
+            main_window.db.log_activity(
+                'input',
+                f'Submitted data for {len(suppliers_data)} suppliers',
+                f'Suppliers: {", ".join(s["name"] for s in suppliers_data)}'
+            )
+        
         # Update results page with new data
         if main_window and hasattr(main_window, 'pages'):
             main_window.pages['results'].update_results(suppliers_data)
@@ -404,6 +412,14 @@ class InputPage(QWidget):
             
             # Set the data in the form
             form.set_data(data)
+        
+        # Log activity
+        if main_window and hasattr(main_window, 'db'):
+            main_window.db.log_activity(
+                'input',
+                'Generated sample data',
+                f'Generated data for {len(self.supplier_forms)} suppliers'
+            )
         
         # Show confirmation
         if main_window:

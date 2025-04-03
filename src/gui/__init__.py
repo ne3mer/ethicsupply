@@ -1,1 +1,3 @@
-# GUI package 
+"""
+GUI package for EthicSupply.
+""" 

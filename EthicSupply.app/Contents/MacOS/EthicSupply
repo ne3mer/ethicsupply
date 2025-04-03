@@ -1,0 +1,7 @@
+#!/bin/bash
+export PATH="/Users/nimaafsharfar/Desktop/supply/venv/bin:/Users/nimaafsharfar/Desktop/supply/venv/bin:/Users/nimaafsharfar/.console-ninja/.bin:/opt/homebrew/opt/postgresql@17/bin:/Users/nimaafsharfar/opt/anaconda3/bin:/Library/Frameworks/Python.framework/Versions/3.12/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.11/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/Applications/VMware Fusion.app/Contents/Public:/Users/nimaafsharfar/.console-ninja/.bin:/opt/homebrew/opt/postgresql@17/bin:/Users/nimaafsharfar/opt/anaconda3/bin:/Library/Frameworks/Python.framework/Versions/3.12/bin"
+export PYTHONPATH="/Users/nimaafsharfar/Desktop/supply:"
+cd "/Users/nimaafsharfar/Desktop/supply"
+source "/Users/nimaafsharfar/Desktop/supply/venv/bin/activate"
+export QT_MAC_WANTS_LAYER=1
+exec python3 run.py
