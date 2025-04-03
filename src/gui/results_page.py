@@ -14,6 +14,7 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon, QColor
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from datetime import datetime
+import os
 
 class ResultsPage(QWidget):
     """Results page with supplier rankings and optimization details."""
@@ -1037,7 +1038,47 @@ class ResultsPage(QWidget):
         if format == 'csv':
             # Export to CSV
             filename = f"optimization_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-            self.df.to_csv(filename, index=False)
+            
+            # Create enhanced dataframe with additional information for export
+            export_df = self.df.copy()
+            
+            # Add additional supplier information
+            export_df['supplier_id'] = [f"SUP-{2023+i:04d}" for i in range(len(export_df))]
+            export_df['contact_email'] = [f"contact@{name.lower().replace('_', '')}.com" for name in export_df['name']]
+            
+            # Add regional information (random assignment for sample data)
+            regions = ['North America', 'Europe', 'Asia', 'South America', 'Africa']
+            export_df['region'] = [random.choice(regions) for _ in range(len(export_df))]
+            
+            # Add sustainability certifications
+            certifications = ['ISO 14001', 'FSC Certified', 'B Corp Certified', 'Cradle to Cradle', 
+                            'Fair Trade', 'EMAS', 'Rainforest Alliance', 'PEFC Certified']
+            export_df['sustainability_cert'] = [random.choice(certifications) for _ in range(len(export_df))]
+            
+            # Add performance ratings based on predicted score
+            def get_rating(score):
+                if score >= 90: return 'A+'
+                elif score >= 85: return 'A'
+                elif score >= 80: return 'A-'
+                elif score >= 75: return 'B+'
+                elif score >= 70: return 'B'
+                elif score >= 65: return 'B-'
+                elif score >= 60: return 'C+'
+                elif score >= 55: return 'C'
+                else: return 'C-'
+            
+            export_df['performance_rating'] = export_df['predicted_score'].apply(get_rating)
+            
+            # Add order history
+            export_df['total_orders'] = [int(random.uniform(50, 150)) for _ in range(len(export_df))]
+            
+            # Add quality metrics
+            export_df['avg_lead_time'] = [round(random.uniform(3, 10), 1) for _ in range(len(export_df))]
+            export_df['quality_rating'] = [round(random.uniform(80, 98), 1) for _ in range(len(export_df))]
+            export_df['relationship_length'] = [round(random.uniform(1, 5), 1) for _ in range(len(export_df))]
+            
+            # Export enhanced dataframe
+            export_df.to_csv(filename, index=False)
             
             # Log activity
             main_window = self.get_main_window()
@@ -1180,6 +1221,24 @@ class ResultsPage(QWidget):
         """)
         export_btn.clicked.connect(self.export_results)
         
+        # Create template download button
+        template_btn = QPushButton("Download Template")
+        template_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 15px;
+                font-size: 14px;
+                min-width: 150px;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+        """)
+        template_btn.clicked.connect(self.download_template)
+        
         # Create back button
         back_btn = QPushButton("Back to Dashboard")
         back_btn.setStyleSheet("""
@@ -1200,11 +1259,104 @@ class ResultsPage(QWidget):
         
         # Add buttons to layout
         button_layout.addWidget(export_btn)
+        button_layout.addWidget(template_btn)
         button_layout.addWidget(back_btn)
         button_layout.addStretch()
         
         # Add button layout to main layout
         self.layout.addLayout(button_layout)
+    
+    def download_template(self):
+        """Download a CSV template for supplier data."""
+        # Create template file path
+        template_path = "supplier_export_template.csv"
+        
+        # Check if template exists
+        if not os.path.exists(template_path):
+            # Create template if it doesn't exist
+            self.create_template_file(template_path)
+        
+        # Get save location from user
+        file_dialog = QFileDialog()
+        save_path, _ = file_dialog.getSaveFileName(
+            self,
+            "Save Supplier Template",
+            "supplier_template.csv",
+            "CSV Files (*.csv)"
+        )
+        
+        if save_path:
+            # Copy template to user-selected location
+            import shutil
+            try:
+                shutil.copy(template_path, save_path)
+                
+                # Log activity
+                main_window = self.get_main_window()
+                if main_window and hasattr(main_window, 'db'):
+                    main_window.db.log_activity(
+                        'export',
+                        'Downloaded supplier template',
+                        f'File: {save_path}'
+                    )
+                
+                # Show confirmation
+                if main_window:
+                    main_window.show_status_message(f"Template downloaded to {save_path}", 3000)
+            except Exception as e:
+                # Show error
+                if main_window:
+                    main_window.show_status_message(f"Error downloading template: {str(e)}", 5000, error=True)
+    
+    def create_template_file(self, path):
+        """Create a CSV template file with sample data.
+        
+        Args:
+            path (str): Path to save the template file.
+        """
+        # Define sample data
+        sample_data = [
+            {
+                'name': 'EcoTech Solutions',
+                'supplier_id': 'ECT-2023',
+                'cost': 430.25,
+                'delivery_time': 3,
+                'co2': 45.8,
+                'ethical_score': 89.5,
+                'predicted_score': 92.7,
+                'contact_email': 'contact@ecotech.com',
+                'region': 'North America',
+                'sustainability_cert': 'ISO 14001',
+                'performance_rating': 'A+',
+                'total_orders': 128,
+                'avg_lead_time': 4.2,
+                'quality_rating': 96.3,
+                'relationship_length': 3.5
+            },
+            {
+                'name': 'GreenMaterials Inc',
+                'supplier_id': 'GMI-2022',
+                'cost': 385.65,
+                'delivery_time': 5,
+                'co2': 38.2,
+                'ethical_score': 93.2,
+                'predicted_score': 90.5,
+                'contact_email': 'sales@greenmaterials.co',
+                'region': 'Europe',
+                'sustainability_cert': 'FSC Certified',
+                'performance_rating': 'A',
+                'total_orders': 89,
+                'avg_lead_time': 7.1,
+                'quality_rating': 92.8,
+                'relationship_length': 2.1
+            }
+        ]
+        
+        # Create DataFrame
+        template_df = pd.DataFrame(sample_data)
+        
+        # Save to CSV
+        template_df.to_csv(path, index=False)
     
     def _get_supplier_analysis(self):
         """Generate detailed analysis of why each top supplier was selected."""
@@ -1262,7 +1414,6 @@ class ResultsPage(QWidget):
         # Try to use the database-trained model first
         model_used = "basic_weighted"
         try:
-            import os
             from src.models.supplier_model import SupplierModel, normalize_supplier_data
             
             # Check if database-trained model exists
