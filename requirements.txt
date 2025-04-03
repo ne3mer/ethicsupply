@@ -1,8 +1,10 @@
 PyQt6>=6.4.0
 PyQt6-WebEngine>=6.4.0
-tensorflow>=2.12.0
-plotly>=5.13.0
-pandas>=1.5.3
-numpy>=1.23.5
+tensorflow>=2.10.0
+plotly>=5.10.0
+pandas>=1.5.0
+numpy>=1.23.0
+matplotlib>=3.6.0
 scikit-learn>=1.2.2
-sqlite3-api==0.1.0 
+sqlite3-api==0.1.0
+scipy>=1.9.0 
