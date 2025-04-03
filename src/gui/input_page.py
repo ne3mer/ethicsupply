@@ -1,86 +1,146 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import csv
+import os
 import random
+import pandas as pd
+import csv
+from datetime import datetime
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QLabel, QFrame, QLineEdit, QSpinBox, QDoubleSpinBox,
     QFormLayout, QScrollArea, QMessageBox, QMainWindow,
-    QFileDialog
+    QFileDialog, QGridLayout, QComboBox, QSizePolicy
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QDoubleValidator, QIntValidator
 
-class SupplierForm(QFrame):
-    """Form for inputting supplier data."""
+class SupplierForm(QWidget):
+    """Form for supplier data input."""
     
-    def __init__(self, supplier_number, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
+        self.setup_ui()
         
-        # Store supplier number
-        self.supplier_number = supplier_number
-        
-        # Set frame properties
-        self.setFrameShape(QFrame.Shape.StyledPanel)
-        self.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border: 1px solid #DEE2E6;
-                border-radius: 8px;
-                padding: 15px;
-            }
-        """)
-        
-        # Create layout
-        layout = QFormLayout(self)
+    def setup_ui(self):
+        """Set up the UI components."""
+        # Main layout
+        layout = QGridLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(10)
         
-        # Create input fields
-        self.name = QLineEdit()
-        self.name.setPlaceholderText(f"Supplier_{supplier_number:02d}")
-        self.cost = QDoubleSpinBox()
-        self.cost.setRange(100, 500)
-        self.cost.setValue(300)
-        self.cost.setPrefix("$")
-        self.delivery_time = QSpinBox()
-        self.delivery_time.setRange(1, 60)
-        self.delivery_time.setValue(5)
-        self.delivery_time.setSuffix(" days")
-        self.co2 = QDoubleSpinBox()
-        self.co2.setRange(50, 200)
-        self.co2.setValue(100)
-        self.co2.setSuffix(" kg")
-        self.ethical_score = QDoubleSpinBox()
-        self.ethical_score.setRange(0, 100)
-        self.ethical_score.setValue(75)
-        self.ethical_score.setSuffix("/100")
+        # Title
+        title = QLabel("Supplier Information")
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(title, 0, 0, 1, 2)
         
-        # Add fields to layout
-        layout.addRow("Supplier Name:", self.name)
-        layout.addRow("Cost:", self.cost)
-        layout.addRow("Delivery Time:", self.delivery_time)
-        layout.addRow("CO2 Emissions:", self.co2)
-        layout.addRow("Ethical Score:", self.ethical_score)
+        # Form fields
+        
+        # Supplier name
+        layout.addWidget(QLabel("Name:"), 1, 0)
+        self.name_edit = QLineEdit()
+        layout.addWidget(self.name_edit, 1, 1)
+        
+        # Supplier ID
+        layout.addWidget(QLabel("Supplier ID:"), 2, 0)
+        self.supplier_id_edit = QLineEdit()
+        layout.addWidget(self.supplier_id_edit, 2, 1)
+        
+        # Cost
+        layout.addWidget(QLabel("Cost ($):"), 3, 0)
+        self.cost_edit = QLineEdit()
+        self.cost_edit.setValidator(QDoubleValidator(0, 1000000, 2))
+        layout.addWidget(self.cost_edit, 3, 1)
+        
+        # CO2 emissions
+        layout.addWidget(QLabel("CO2 Emissions (kg):"), 4, 0)
+        self.co2_edit = QLineEdit()
+        self.co2_edit.setValidator(QDoubleValidator(0, 1000000, 2))
+        layout.addWidget(self.co2_edit, 4, 1)
+        
+        # Delivery time
+        layout.addWidget(QLabel("Delivery Time (days):"), 5, 0)
+        self.delivery_time_edit = QLineEdit()
+        self.delivery_time_edit.setValidator(QDoubleValidator(1, 365, 2))
+        layout.addWidget(self.delivery_time_edit, 5, 1)
+        
+        # Contact email
+        layout.addWidget(QLabel("Contact Email:"), 6, 0)
+        self.contact_email_edit = QLineEdit()
+        layout.addWidget(self.contact_email_edit, 6, 1)
+        
+        # Region
+        layout.addWidget(QLabel("Region:"), 7, 0)
+        self.region_edit = QComboBox()
+        self.region_edit.addItems(["North America", "Europe", "Asia", "Africa", "South America", "Australia/Oceania"])
+        layout.addWidget(self.region_edit, 7, 1)
+        
+        # Sustainability certification
+        layout.addWidget(QLabel("Sustainability Certification:"), 8, 0)
+        self.sustainability_cert_edit = QLineEdit()
+        layout.addWidget(self.sustainability_cert_edit, 8, 1)
+        
+        # Note informing about ethical score calculation
+        ethical_note = QLabel("Note: Ethical score will be calculated automatically by the AI model")
+        ethical_note.setStyleSheet("font-style: italic; color: #666;")
+        layout.addWidget(ethical_note, 9, 0, 1, 2)
+        
+        # Stretch at the end
+        layout.setRowStretch(10, 1)
+    
+    def clear(self):
+        """Clear all form fields."""
+        self.name_edit.clear()
+        self.supplier_id_edit.clear()
+        self.cost_edit.clear()
+        self.co2_edit.clear()
+        self.delivery_time_edit.clear()
+        self.contact_email_edit.clear()
+        self.region_edit.setCurrentIndex(0)
+        self.sustainability_cert_edit.clear()
     
     def get_data(self):
-        """Get the supplier data as a dictionary."""
-        return {
-            'name': self.name.text() or f"Supplier_{self.supplier_number:02d}",
-            'cost': self.cost.value(),
-            'delivery_time': self.delivery_time.value(),
-            'co2': self.co2.value(),
-            'ethical_score': self.ethical_score.value()
-        }
+        """Get data from the form.
+        
+        Returns:
+            dict: Data from the form
+        """
+        try:
+            return {
+                "name": self.name_edit.text() or f"Supplier_{random.randint(1, 100):02d}",
+                "cost": float(self.cost_edit.text()) if self.cost_edit.text() else random.uniform(100, 1000),
+                "co2": float(self.co2_edit.text()) if self.co2_edit.text() else random.uniform(10, 100),
+                "delivery_time": float(self.delivery_time_edit.text()) if self.delivery_time_edit.text() else random.uniform(1, 30),
+            }
+        except ValueError as e:
+            print(f"Error converting form data: {e}")
+            return {
+                "name": self.name_edit.text() or f"Supplier_{random.randint(1, 100):02d}",
+                "cost": random.uniform(100, 1000),
+                "co2": random.uniform(10, 100),
+                "delivery_time": random.uniform(1, 30),
+            }
     
     def set_data(self, data):
-        """Set the form data from a dictionary."""
-        self.name.setText(data.get('name', ''))
-        self.cost.setValue(float(data.get('cost', 300)))
-        self.delivery_time.setValue(int(data.get('delivery_time', 5)))
-        self.co2.setValue(float(data.get('co2', 100)))
-        self.ethical_score.setValue(float(data.get('ethical_score', 75)))
+        """Set the form data.
+        
+        Args:
+            data (dict): Form data.
+        """
+        self.name_edit.setText(data.get("name", ""))
+        self.supplier_id_edit.setText(data.get("supplier_id", ""))
+        self.cost_edit.setText(str(data.get("cost", "")))
+        self.co2_edit.setText(str(data.get("co2", "")))
+        self.delivery_time_edit.setText(str(data.get("delivery_time", "")))
+        self.contact_email_edit.setText(data.get("contact_email", ""))
+        
+        # Set region if it exists in the combo box
+        region = data.get("region", "")
+        index = self.region_edit.findText(region)
+        if index >= 0:
+            self.region_edit.setCurrentIndex(index)
+        
+        self.sustainability_cert_edit.setText(data.get("sustainability_cert", ""))
 
 class InputPage(QWidget):
     """Page for inputting supplier data."""
@@ -226,7 +286,7 @@ class InputPage(QWidget):
                 background-color: #C82333;
             }
         """)
-        remove_btn.clicked.connect(self.remove_supplier_form)
+        remove_btn.clicked.connect(self.remove_last_supplier)
         
         # Add buttons to layout
         management_layout.addWidget(add_btn)
@@ -254,28 +314,34 @@ class InputPage(QWidget):
             while len(self.supplier_forms) < num_suppliers:
                 self.add_supplier_form()
             while len(self.supplier_forms) > num_suppliers:
-                self.remove_supplier_form()
+                self.remove_last_supplier()
     
     def add_supplier_form(self):
         """Add a new supplier form."""
         supplier_number = len(self.supplier_forms) + 1
-        form = SupplierForm(supplier_number)
+        form = SupplierForm()
         self.supplier_forms.append(form)
         self.forms_layout.addWidget(form)
-        
-        # Update form ranges based on settings
-        main_window = self.get_main_window()
-        if main_window and hasattr(main_window, 'pages'):
-            settings = main_window.pages['settings']
-            form.cost.setRange(settings.min_cost.value(), settings.max_cost.value())
-            form.ethical_score.setMinimum(settings.min_ethical.value())
     
-    def remove_supplier_form(self):
+    def remove_last_supplier(self):
         """Remove the last supplier form."""
-        if len(self.supplier_forms) > 1:  # Keep at least one form
+        if self.supplier_forms:
+            # Get the last form
             form = self.supplier_forms.pop()
-            form.deleteLater()
+            
+            # Remove from layout
             self.forms_layout.removeWidget(form)
+            
+            # Delete the widget
+            form.deleteLater()
+            
+            # Update button states - ensure remove button is enabled only when we have more than one form
+            self.update_button_states()
+            
+            # Update minimum height
+            self.forms_container.setMinimumHeight(
+                max(self.forms_layout.count() * 140, 300)
+            )
     
     def get_main_window(self):
         """Get the main window from the parent widgets."""
@@ -295,25 +361,26 @@ class InputPage(QWidget):
         # Collect data from all forms
         suppliers_data = [form.get_data() for form in self.supplier_forms]
         
-        # Get minimum ethical score from settings
-        main_window = self.get_main_window()
-        min_ethical = 50  # Default value
-        if main_window and hasattr(main_window, 'pages'):
-            settings = main_window.pages['settings']
-            min_ethical = settings.min_ethical.value()
-        
         # Validate data
-        for supplier in suppliers_data:
-            if supplier['ethical_score'] < min_ethical:
+        for i, supplier in enumerate(suppliers_data):
+            if not supplier['name']:
+                supplier['name'] = f"Supplier_{i+1:02d}"
+            
+            # Check for required fields
+            required_fields = ['cost', 'co2', 'delivery_time']
+            missing_fields = [field for field in required_fields if not supplier.get(field)]
+            
+            if missing_fields:
                 QMessageBox.warning(
                     self,
-                    "Invalid Data",
-                    f"Supplier {supplier['name']} has an ethical score below {min_ethical}. "
-                    "Please adjust the score to meet minimum requirements."
+                    "Missing Data",
+                    f"Supplier {supplier['name']} is missing required data: {', '.join(missing_fields)}. "
+                    "Please complete all required fields."
                 )
                 return
         
         # Log activity
+        main_window = self.get_main_window()
         if main_window and hasattr(main_window, 'db'):
             main_window.db.log_activity(
                 'input',
@@ -391,39 +458,41 @@ class InputPage(QWidget):
         self.layout.addLayout(management_layout)
     
     def generate_sample_data(self):
-        """Generate random sample data for all supplier forms."""
-        main_window = self.get_main_window()
-        settings = main_window.pages['settings'] if main_window else None
-        
-        for form in self.supplier_forms:
-            # Get ranges from settings if available
-            min_cost = settings.min_cost.value() if settings else 100
-            max_cost = settings.max_cost.value() if settings else 1000
-            min_ethical = settings.min_ethical.value() if settings else 50
+        """Generate sample supplier data."""
+        try:
+            # Clear existing forms data but keep the forms
+            for form in self.supplier_forms:
+                form.clear()
             
-            # Generate random data
-            data = {
-                'name': f"Supplier_{form.supplier_number:02d}",
-                'cost': random.uniform(min_cost, max_cost),
-                'delivery_time': random.randint(1, 30),
-                'co2': random.uniform(50, 200),
-                'ethical_score': random.uniform(min_ethical, 100)
-            }
+            # Make sure we have at least 5 forms
+            current_forms = len(self.supplier_forms)
+            if current_forms < 5:
+                for i in range(5 - current_forms):
+                    self.add_supplier_form()
             
-            # Set the data in the form
-            form.set_data(data)
-        
-        # Log activity
-        if main_window and hasattr(main_window, 'db'):
-            main_window.db.log_activity(
-                'input',
-                'Generated sample data',
-                f'Generated data for {len(self.supplier_forms)} suppliers'
-            )
-        
-        # Show confirmation
-        if main_window:
-            main_window.show_status_message("Sample data generated successfully", 3000)
+            # Now populate all forms with sample data
+            for i, form in enumerate(self.supplier_forms):
+                # Set sample data
+                form.name_edit.setText(f"Supplier_{i+1:02d}")
+                form.cost_edit.setText(str(round(random.uniform(300, 800), 2)))
+                form.co2_edit.setText(str(round(random.uniform(30, 100), 1)))
+                form.delivery_time_edit.setText(str(round(random.uniform(3, 25), 1)))
+            
+            # Log activity
+            main_window = self.get_main_window()
+            if main_window and hasattr(main_window, 'db'):
+                main_window.db.log_activity(
+                    'input',
+                    'Generated sample data',
+                    f'Generated data for {len(self.supplier_forms)} suppliers'
+                )
+        except Exception as e:
+            print(f"Error generating sample data: {e}")
+    
+    def update_button_states(self):
+        """Update the state of add/remove buttons."""
+        if hasattr(self, 'remove_btn'):
+            self.remove_btn.setEnabled(len(self.supplier_forms) > 1)
     
     def download_csv_template(self):
         """Download a CSV template for supplier data."""
@@ -436,16 +505,39 @@ class InputPage(QWidget):
         )
         
         if file_path:
-            # Write template file
-            with open(file_path, 'w', newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(['name', 'cost', 'delivery_time', 'co2', 'ethical_score'])
-                writer.writerow(['Supplier_01', '300', '3', '100', '75'])  # Example row
-            
-            # Show confirmation
-            main_window = self.get_main_window()
-            if main_window:
-                main_window.show_status_message("CSV template downloaded successfully", 3000)
+            try:
+                # Check if the enhanced template exists
+                template_path = "supplier_export_template.csv"
+                if os.path.exists(template_path):
+                    # Copy the enhanced template
+                    import shutil
+                    shutil.copy(template_path, file_path)
+                else:
+                    # Fall back to creating a basic template
+                    with open(file_path, 'w', newline='') as f:
+                        writer = csv.writer(f)
+                        writer.writerow(['name', 'cost', 'delivery_time', 'co2'])
+                        writer.writerow(['Supplier_01', '300', '3', '100'])  # Example row
+                
+                # Log activity
+                main_window = self.get_main_window()
+                if main_window and hasattr(main_window, 'db'):
+                    main_window.db.log_activity(
+                        'export',
+                        'Downloaded CSV template',
+                        f'File: {file_path}'
+                    )
+                
+                # Show confirmation
+                if main_window:
+                    main_window.show_status_message("CSV template downloaded successfully", 3000)
+            except Exception as e:
+                # Show error
+                QMessageBox.warning(
+                    self,
+                    "Template Error",
+                    f"Error creating template: {str(e)}"
+                )
     
     def upload_csv_data(self):
         """Upload supplier data from a CSV file."""
@@ -468,7 +560,7 @@ class InputPage(QWidget):
                 
                 # Clear existing forms
                 while self.supplier_forms:
-                    self.remove_supplier_form()
+                    self.remove_last_supplier()
                 
                 # Create new forms with CSV data
                 for i, supplier in enumerate(suppliers, 1):
@@ -486,5 +578,5 @@ class InputPage(QWidget):
                     "Upload Error",
                     f"Error uploading CSV data: {str(e)}\n\n"
                     "Please make sure the CSV file has the correct format:\n"
-                    "name, cost, delivery_time, co2, ethical_score"
+                    "name, cost, delivery_time, co2"
                 ) 

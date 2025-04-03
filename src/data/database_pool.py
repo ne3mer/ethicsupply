@@ -10,6 +10,7 @@ import time
 import logging
 from queue import Queue
 from contextlib import contextmanager
+import numpy as np
 
 # Set up logging
 logging.basicConfig(
@@ -217,83 +218,183 @@ class Database:
                 logger.error(f"Error getting suppliers: {e}")
                 raise e
     
-    def save_optimization(self, suppliers_df, description=None):
-        """Save an optimization run to the database.
+    def save_optimization(self, suppliers_df, description='', method='ml_model'):
+        """Save optimization results to the database.
         
         Args:
-            suppliers_df (pandas.DataFrame): DataFrame containing supplier data with scores.
-            description (str, optional): Description of the optimization. Defaults to None.
-            
-        Returns:
-            int: ID of the optimization.
-        """
-        logger.info(f"Saving optimization with {len(suppliers_df)} suppliers")
+            suppliers_df (DataFrame): DataFrame with supplier data
+            description (str): Description of the optimization
+            method (str): Method used for optimization
         
-        with self.connection_pool.get_connection() as conn:
+        Returns:
+            int: Optimization ID
+        """
+        conn = None
+        try:
+            # Create connection and cursor
+            conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            try:
-                # Start transaction
-                cursor.execute("BEGIN")
-                
-                # Get current timestamp
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                
-                # Insert optimization
+            # First determine the schema of the optimizations table
+            cursor.execute("PRAGMA table_info(optimizations)")
+            columns = [info[1] for info in cursor.fetchall()]
+            
+            timestamp = int(time.time())
+            desc = description or f"Optimization run at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            num_suppliers = len(suppliers_df)
+            
+            # Create optimization record based on schema
+            optimization_id = None
+            
+            # Check if table exists
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='optimizations'")
+            if not cursor.fetchone():
+                # Create the table with minimal schema
                 cursor.execute('''
-                    INSERT INTO optimizations (timestamp, description, num_suppliers)
-                    VALUES (?, ?, ?)
-                ''', (
-                    timestamp,
-                    description or f"Optimization run at {timestamp}",
-                    len(suppliers_df)
-                ))
+                    CREATE TABLE IF NOT EXISTS optimizations (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        timestamp INTEGER NOT NULL,
+                        description TEXT
+                    )
+                ''')
+                cursor.execute('''
+                    INSERT INTO optimizations (timestamp, description)
+                    VALUES (?, ?)
+                ''', (timestamp, desc))
+                optimization_id = cursor.lastrowid
+            else:
+                # Table exists, determine schema
+                cols = set(columns)
+                
+                # Different combinations of columns
+                if 'method' in cols and 'num_suppliers' in cols and 'score' in cols:
+                    cursor.execute('''
+                        INSERT INTO optimizations (timestamp, description, method, num_suppliers, score)
+                        VALUES (?, ?, ?, ?, ?)
+                    ''', (timestamp, desc, method, num_suppliers, 0))
+                elif 'method' in cols and 'num_suppliers' in cols:
+                    cursor.execute('''
+                        INSERT INTO optimizations (timestamp, description, method, num_suppliers)
+                        VALUES (?, ?, ?, ?)
+                    ''', (timestamp, desc, method, num_suppliers))
+                elif 'method' in cols and 'score' in cols:
+                    cursor.execute('''
+                        INSERT INTO optimizations (timestamp, description, method, score)
+                        VALUES (?, ?, ?, ?)
+                    ''', (timestamp, desc, method, 0))
+                elif 'num_suppliers' in cols and 'score' in cols:
+                    cursor.execute('''
+                        INSERT INTO optimizations (timestamp, description, num_suppliers, score)
+                        VALUES (?, ?, ?, ?)
+                    ''', (timestamp, desc, num_suppliers, 0))
+                elif 'method' in cols:
+                    cursor.execute('''
+                        INSERT INTO optimizations (timestamp, description, method)
+                        VALUES (?, ?, ?)
+                    ''', (timestamp, desc, method))
+                elif 'num_suppliers' in cols:
+                    cursor.execute('''
+                        INSERT INTO optimizations (timestamp, description, num_suppliers)
+                        VALUES (?, ?, ?)
+                    ''', (timestamp, desc, num_suppliers))
+                elif 'score' in cols:
+                    cursor.execute('''
+                        INSERT INTO optimizations (timestamp, description, score)
+                        VALUES (?, ?, ?)
+                    ''', (timestamp, desc, 0))
+                else:
+                    cursor.execute('''
+                        INSERT INTO optimizations (timestamp, description)
+                        VALUES (?, ?)
+                    ''', (timestamp, desc))
                 
                 optimization_id = cursor.lastrowid
-                logger.debug(f"Created optimization with ID {optimization_id}")
+            
+            logging.debug(f"Created optimization with ID {optimization_id}")
+            
+            # Check if ethical_score exists, otherwise it will be calculated by the model
+            if 'ethical_score' not in suppliers_df.columns:
+                # Calculate normalized metrics for ethical score
+                normalized_df = suppliers_df.copy()
+                for col in ['cost', 'co2', 'delivery_time']:
+                    min_val = normalized_df[col].min()
+                    max_val = normalized_df[col].max()
+                    if max_val > min_val:
+                        normalized_df[col] = (normalized_df[col] - min_val) / (max_val - min_val)
+                    else:
+                        normalized_df[col] = 0.5
                 
-                # Save suppliers directly using this connection rather than calling self.save_suppliers
-                supplier_ids = []
-                logger.info(f"Saving {len(suppliers_df)} suppliers")
+                # Invert cost, CO2, and delivery time (lower is better)
+                for col in ['cost', 'co2', 'delivery_time']:
+                    normalized_df[col] = 1 - normalized_df[col]
                 
-                for _, row in suppliers_df[['name', 'cost', 'co2', 'delivery_time', 'ethical_score']].iterrows():
-                    cursor.execute('''
-                        INSERT INTO suppliers (name, cost, co2, delivery_time, ethical_score)
-                        VALUES (?, ?, ?, ?, ?)
-                    ''', (
-                        row['name'],
-                        row['cost'],
-                        row['co2'],
-                        row['delivery_time'],
-                        row['ethical_score']
-                    ))
-                    supplier_ids.append(cursor.lastrowid)
-                
-                logger.info(f"Successfully saved {len(supplier_ids)} suppliers")
-                
-                # Insert optimization results
-                for i, (_, row) in enumerate(suppliers_df.iterrows()):
-                    cursor.execute('''
-                        INSERT INTO optimization_results (optimization_id, supplier_id, score, selected)
-                        VALUES (?, ?, ?, ?)
-                    ''', (
-                        optimization_id,
-                        supplier_ids[i],
-                        row['predicted_score'],
-                        1 if i < 3 else 0  # Select top 3 suppliers
-                    ))
-                
-                # Commit transaction
-                conn.commit()
-                logger.info(f"Successfully saved optimization {optimization_id}")
-                return optimization_id
-            except Exception as e:
-                # Rollback transaction on error
+                # Calculate ethical score
+                suppliers_df['ethical_score'] = (
+                    normalized_df['cost'] * 0.3 + 
+                    normalized_df['co2'] * 0.4 + 
+                    normalized_df['delivery_time'] * 0.3
+                ) * 100
+            
+            # Save suppliers to the database (create table if it doesn't exist)
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS suppliers (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    optimization_id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    cost REAL NOT NULL,
+                    co2 REAL NOT NULL,
+                    delivery_time REAL NOT NULL,
+                    ethical_score REAL NOT NULL
+                )
+            ''')
+            
+            # Save supplier data
+            logging.info(f"Saving {len(suppliers_df)} suppliers")
+            for _, row in suppliers_df.iterrows():
+                cursor.execute('''
+                    INSERT INTO suppliers (
+                        optimization_id, name, cost, co2, delivery_time, ethical_score
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (
+                    optimization_id,
+                    row['name'],
+                    float(row['cost']),
+                    float(row['co2']),
+                    float(row['delivery_time']),
+                    float(row['ethical_score'])
+                ))
+            
+            logging.info("Successfully saved suppliers")
+            
+            # Update score if applicable
+            if 'score' in cols and len(suppliers_df) > 0:
+                # Save the score of the top supplier
+                try:
+                    top_supplier = suppliers_df.iloc[0]
+                    if 'predicted_score' in top_supplier:
+                        cursor.execute('''
+                            UPDATE optimizations
+                            SET score = ?
+                            WHERE id = ?
+                        ''', (float(top_supplier['predicted_score']), optimization_id))
+                except Exception as e:
+                    logging.warning(f"Could not update score: {e}")
+            
+            conn.commit()
+            logging.info(f"Successfully saved optimization {optimization_id}")
+            
+            return optimization_id
+        except Exception as e:
+            # Log and handle the error
+            logging.error(f"Error saving optimization: {e}")
+            if conn:
                 conn.rollback()
-                logger.error(f"Error saving optimization: {e}")
-                raise e
-            finally:
-                cursor.close()
+            # Don't raise, just return None to indicate failure
+            return None
+        finally:
+            if conn:
+                conn.close()
     
     def get_optimizations(self, limit=10):
         """Get recent optimizations from the database.
@@ -449,7 +550,6 @@ class Database:
 
 if __name__ == "__main__":
     # Test the database functionality
-    import numpy as np
     
     # Generate sample data
     suppliers = []

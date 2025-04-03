@@ -1,11 +1,36 @@
-name,supplier_id,cost,delivery_time,co2,ethical_score,predicted_score,contact_email,region,sustainability_cert,performance_rating,total_orders,avg_lead_time,quality_rating,relationship_length
-EcoTech Solutions,ECT-2023,430.25,3,45.8,89.5,92.7,contact@ecotech.com,North America,ISO 14001,A+,128,4.2,96.3,3.5
-GreenMaterials Inc,GMI-2022,385.65,5,38.2,93.2,90.5,sales@greenmaterials.co,Europe,FSC Certified,A,89,7.1,92.8,2.1
-SustainableSources Ltd,SSL-2021,412.30,4,51.6,85.7,87.3,support@sustainablesources.org,Asia,Cradle to Cradle,A-,104,5.9,90.2,4.8
-EthicalProcurement Co,EPC-2022,450.12,2,47.3,95.1,86.9,info@ethicalprocurement.com,North America,B Corp Certified,A,76,3.8,95.7,1.7
-CircularEconomy Partners,CEP-2021,475.80,6,42.1,90.3,85.4,partners@circulareconomy.net,Europe,EMAS,B+,62,8.2,91.5,3.2
-BiodegradablePro,BDP-2023,398.45,7,49.8,88.6,83.2,sales@biodegradablepro.io,South America,Biodegradable Products,B+,58,8.9,89.4,1.9
-EcoFriendlyMaterials,EFM-2021,429.70,4,53.2,87.9,82.7,support@ecofriendly.com,Asia,Rainforest Alliance,B,93,6.2,88.1,2.8
-SustainableSupplyCo,SSC-2022,465.25,5,44.7,92.4,81.5,info@sustainablesupply.co,Europe,PEFC Certified,B+,71,7.4,90.6,3.4
-GreenChainSolutions,GCS-2023,405.60,8,48.3,86.5,79.8,sales@greenchain.net,North America,Energy Star,B,84,9.1,85.3,2.6
-EthicalResourceGroup,ERG-2021,438.90,3,56.4,84.7,78.3,contact@ethicalresource.org,Africa,Fair Trade,B-,52,5.5,87.2,1.8 
+name,supplier_id,cost,delivery_time,co2,contact_email,region,sustainability_cert,payment_terms,production_capacity,min_order_qty,max_order_qty,currency,certifications,specialization,website
+Example Supplier 1,SUPL-001,435.50,4,47.2,contact@supplier1.com,North America,ISO 14001,Net 30,5000 units/month,100,10000,USD,ISO 9001;ISO 14001,Electronics,https://www.supplier1.com
+Example Supplier 2,SUPL-002,382.75,6,42.8,info@supplier2.com,Europe,FSC Certified,Net 45,3000 units/month,50,5000,EUR,FSC;PEFC,Packaging,https://www.supplier2.com
+Example Supplier 3,SUPL-003,528.10,3,52.4,sales@supplier3.com,Asia,B Corp Certified,Net 60,8000 units/month,200,15000,USD,B Corp;Fair Trade,Textiles,https://www.supplier3.com
+,,,,,,,,,,,,,,,,
+
+# INSTRUCTIONS FOR FILLING THIS TEMPLATE:
+# 
+# Required fields:
+# - name: Company name of the supplier
+# - cost: Unit cost in your specified currency
+# - delivery_time: Average delivery time in days
+# - co2: CO2 emissions in kg per unit
+#
+# Optional fields:
+# - supplier_id: Your internal ID for the supplier
+# - contact_email: Primary contact email
+# - region: Geographic region (North America, Europe, Asia, etc.)
+# - sustainability_cert: Primary sustainability certification
+# - payment_terms: Standard payment terms (Net 30, Net 45, etc.)
+# - production_capacity: Monthly or annual production capacity
+# - min_order_qty: Minimum order quantity
+# - max_order_qty: Maximum order quantity
+# - currency: Currency code for costs (USD, EUR, etc.)
+# - certifications: List of certifications separated by semicolons (;)
+# - specialization: Primary industry or product category
+# - website: Supplier's website URL
+#
+# Note: The ethical score will be calculated automatically by the AI model.
+#
+# Instructions:
+# 1. Replace the example data with your actual supplier information
+# 2. Keep the header row intact
+# 3. Delete these instructions before importing
+# 4. Save as CSV format
+# 5. Import using the "Upload" feature in the application 
